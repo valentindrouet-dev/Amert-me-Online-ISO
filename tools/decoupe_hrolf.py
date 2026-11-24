@@ -26,11 +26,15 @@ for (r,c),pts in cells.items():
   for u,v in pts: fp[u-x0,v-y0]=S[u,v]
   if c in MIROIR.get(r,()): f=ImageOps.mirror(f)
   frames[(r,c)]=f
-def ancre(f):
+# Ancre horizontale : les pieds pour les gestes sur place ; la tête pour la marche (la planche fait tanguer
+# le corps de ±5 px d'une image à l'autre : calé sur les pieds, il flotte). Ancre verticale : le pied le plus bas.
+def ancre(f,tete):
   a=f.load();w,h=f.size;ok=[(x,y) for y in range(h) for x in range(w) if a[x,y][3]>60 and not gris(a[x,y])]
-  bas=max(y for x,y in ok);bande=[x for x,y in ok if y>=bas-h*.12 and y>=h*.5] or [x for x,y in ok]
+  bas=max(y for x,y in ok);haut=min(y for x,y in ok)
+  if tete: bande=[x for x,y in ok if y<=haut+(bas-haut)*.16]
+  else: bande=[x for x,y in ok if y>=bas-h*.12 and y>=h*.5] or [x for x,y in ok]
   return sum(bande)/len(bande),bas
-A={k:ancre(f) for k,f in frames.items()}
+A={k:ancre(f,k[0]==1) for k,f in frames.items()}
 L=max(ax for (ax,ay) in A.values());Rt=max(f.size[0]-A[k][0] for k,f in frames.items());Hh=max(A[k][1] for k in frames);Bb=max(f.size[1]-A[k][1] for k,f in frames.items())
 half=int(max(L,Rt))+2;FW,FH=2*half,int(Hh+Bb)+4;base=int(Hh)+1
 ow,oh=round(FW*K),round(FH*K);print('image',ow,oh,'pieds',round(base/FH,3))

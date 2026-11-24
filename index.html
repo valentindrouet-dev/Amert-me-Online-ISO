@@ -14,51 +14,52 @@
 html,body{margin:0;height:100%;background:#000;color:var(--ink);font:16px system-ui,sans-serif;overflow:hidden;user-select:none}
 canvas#c{position:fixed;inset:0;width:100%;height:100%;display:block;cursor:pointer}
 .k{font-family:'Killam',Georgia,serif;font-weight:700}
-.panel{background:color-mix(in srgb,var(--panel) 92%,transparent);border:1px solid var(--line-strong);border-radius:12px}
-.sec{font:600 12px system-ui;letter-spacing:2.5px;text-transform:uppercase;color:var(--muted)}
-/* Cadre du héros : portrait cerclé de ses PV, nom, classe, VIE, caracs, états */
-#frame{position:fixed;left:12px;top:12px;display:flex;gap:12px;padding:10px 14px 10px 10px;align-items:center}
-#pwrap{position:relative;width:86px;height:86px;flex:none;border-radius:50%;padding:5px;background:conic-gradient(#c0392b var(--pv,100%),#2a1512 0)}
-#pwrap::after{content:'';position:absolute;inset:0;border-radius:50%;box-shadow:inset 0 0 0 2px #0009,0 0 0 2px var(--mait)}
-#portrait{width:76px;height:76px;border-radius:50%;background:radial-gradient(#2b3a3e,#10171a);display:block}
-#pvtxt{position:absolute;left:50%;bottom:-8px;transform:translateX(-50%);font:800 11px system-ui;background:#2a1512;border:1px solid #c0392b;border-radius:8px;padding:0 6px;white-space:nowrap}
-#fname{font-size:22px;line-height:1}
-.cart{display:inline-block;font:700 10px system-ui;letter-spacing:2px;text-transform:uppercase;padding:2px 8px;border-radius:10px;background:#b0452e;color:#fff;margin:4px 0 6px}
-.pills{display:flex;gap:5px;flex-wrap:wrap;align-items:center}
-.pills+.pills{margin-top:5px}.pills:empty{display:none}
-.carac{display:inline-flex;flex-direction:column;align-items:center;min-width:38px;padding:2px 5px;border-radius:7px;background:var(--panel-2);border:1px solid var(--line)}
-.carac small{font:600 9px system-ui;letter-spacing:1.5px;color:var(--muted)}.carac b{font:700 16px 'Killam',Georgia,serif;line-height:1.1}
-.pill{display:inline-flex;align-items:center;gap:3px;font:700 12px system-ui;padding:1px 7px;border-radius:9px;background:var(--btn);border:1px solid var(--line)}
+.panel{border:18px solid transparent;border-image:url(img/ui/panneau.webp) 46 fill / 18px stretch;background:none}
+:root{--or:#f1d7a1}
+.sec{font:600 12px system-ui;letter-spacing:2.5px;text-transform:uppercase;color:var(--or)}
+.sec::after{content:'';display:block;height:9px;margin:2px 0 4px;background:url(img/ui/separateur.webp) center/auto 100% no-repeat}
+/* Cadre du héros : pièce « cadre_heros » (rond + plaque), caracs dessous */
+#frame{position:fixed;left:10px;top:8px;width:390px;height:133px;background:url(img/ui/cadre_heros.webp) 0 0/100% 100% no-repeat}
+#portrait{position:absolute;left:10px;top:20px;width:108px;height:108px;border-radius:50%}
+#fplaque{position:absolute;left:142px;top:26px;right:22px;bottom:20px;display:flex;flex-direction:column;justify-content:center;gap:2px}
+#fname{font-size:22px;line-height:1;color:var(--or);text-shadow:0 2px 3px #000}
+.cart{align-self:flex-start;font:700 10px/26px system-ui;letter-spacing:2px;text-transform:uppercase;padding:0 22px;height:28px;color:#fff;text-shadow:0 1px 2px #000;background:url(img/ui/banniere.webp) center/100% 100% no-repeat}
+#fvie{display:flex;gap:3px}#fvie img{width:18px;height:18px}
+#fsous{position:fixed;left:16px;top:144px}
+.pills{display:flex;gap:6px;flex-wrap:wrap;align-items:center}.pills+.pills{margin-top:6px}.pills:empty{display:none}
+.carac{position:relative;width:68px;height:51px;background:0 0/100% 100% no-repeat}
+.carac b{position:absolute;right:11px;bottom:7px;font:700 19px 'Killam',Georgia,serif;color:var(--or);text-shadow:0 2px 2px #000}
+.pill{display:inline-flex;align-items:center;gap:3px;font:700 12px system-ui;padding:2px 8px;border-radius:9px;background:#120d0acc;border:1px solid var(--line)}
 .pill img{width:16px;height:16px}
-.etat{border-color:var(--t);color:var(--t);background:color-mix(in srgb,var(--t) 15%,var(--panel))}
-.vie{width:15px;height:15px;opacity:.2;filter:grayscale(1)}.vie.on{opacity:1;filter:none}
-.bar{position:relative;height:16px;border-radius:8px;background:var(--track);border:1px solid var(--line);overflow:hidden;width:220px}
-.bar>i{position:absolute;inset:0 auto 0 0;background:linear-gradient(#d4735a,#a4442f);transition:width .2s}
-.bar>span{position:absolute;inset:0;text-align:center;font:700 11px/15px system-ui;text-shadow:0 1px 2px #000}
-/* Barre d'action : orbe de PV, cases, orbe de Rage */
-#bar{position:fixed;left:50%;bottom:10px;transform:translateX(-50%);display:flex;align-items:flex-end;gap:14px;padding:8px 12px;border-radius:16px}
-.orbe{position:relative;width:88px;height:88px;border-radius:50%;overflow:hidden;background:radial-gradient(circle at 50% 60%,#1a1210,#070505);box-shadow:0 0 0 3px #3a2c20,0 0 0 5px var(--mait),0 4px 12px #000a}
-.orbe>i{position:absolute;left:0;right:0;bottom:0;height:var(--f,100%);background:var(--g);transition:height .25s}
-.orbe::after{content:'';position:absolute;left:18%;top:8%;width:46%;height:28%;border-radius:50%;background:radial-gradient(#ffffff55,transparent 70%)}
-.orbe span{position:absolute;inset:0;display:grid;place-items:center;font:700 20px 'Killam',Georgia,serif;text-shadow:0 2px 3px #000,0 0 2px #000;z-index:1}
-.orbe small{position:absolute;left:0;right:0;bottom:12px;text-align:center;font:700 9px system-ui;letter-spacing:2px;text-transform:uppercase;z-index:1;text-shadow:0 1px 2px #000}
-#oPV{--g:linear-gradient(#e0533f,#7a1a12)}#oRage{--g:linear-gradient(#f08a3a,#8a2e10)}
-#centre{display:flex;flex-direction:column;align-items:center;gap:6px}
-#ronds{display:flex;gap:6px;align-items:flex-end}
-.sep{width:2px;height:44px;background:var(--line);margin:0 4px;align-self:center}
-.slot{position:relative;width:58px;height:58px;border-radius:8px;cursor:pointer;background:linear-gradient(#1b2629,#0d1417);border:2px solid color-mix(in srgb,var(--t) 70%,#000);box-shadow:inset 0 0 10px #000,0 2px 6px #000a;display:grid;place-items:center}
-.slot:hover{border-color:var(--t);box-shadow:inset 0 0 10px #000,0 0 10px color-mix(in srgb,var(--t) 60%,transparent)}
-.slot img{width:44px;height:44px;object-fit:contain;filter:drop-shadow(0 2px 2px #000)}
-.slot .h{position:absolute;top:2px;left:4px;font:800 11px system-ui;color:var(--ink);text-shadow:0 1px 2px #000}
-.slot .q{position:absolute;bottom:1px;right:4px;font:800 13px system-ui;text-shadow:0 1px 2px #000,0 0 2px #000}
-.slot .cd{position:absolute;inset:0;border-radius:6px;background:conic-gradient(#000c var(--p,0%),transparent 0)}
-.slot .s{position:absolute;inset:0;display:grid;place-items:center;font:800 16px system-ui;text-shadow:0 1px 3px #000}
-.slot.off img{filter:grayscale(1) brightness(.5)}.slot.off{cursor:default}
+.etat{border-color:var(--t);color:var(--t)}
+/* Barre d'action : orbes (cadre + verre vide + verre plein rogné), plaque, cases */
+#bar{position:fixed;left:50%;bottom:6px;transform:translateX(-50%);display:flex;align-items:flex-end}
+.orbe{position:relative;width:124px;height:130px;flex:none;z-index:1}
+.orbe>i{position:absolute;left:11.9%;top:12.9%;width:75%;height:71%;background:var(--o) 0 0/100% 100%}
+.orbe>i.v{background-image:url(img/ui/orbe_vide.webp)}
+.orbe>i.p{clip-path:inset(calc(100% - var(--f,100%)) 0 0 0);transition:clip-path .25s}
+.orbe::after{content:'';position:absolute;inset:0;background:url(img/ui/orbe_cadre.webp) 0 0/100% 100%}
+.orbe span{position:absolute;left:0;right:0;top:12.9%;height:71%;display:grid;place-items:center;font:700 24px 'Killam',Georgia,serif;text-shadow:0 2px 3px #000,0 0 3px #000;z-index:2}
+.orbe small{position:absolute;left:0;right:0;bottom:6%;text-align:center;font:800 9px system-ui;letter-spacing:2px;text-transform:uppercase;color:var(--or);z-index:2}
+#centre{position:relative;margin:0 -22px 10px;padding:16px 42px 12px;display:flex;flex-direction:column;align-items:center;gap:4px;background:url(img/ui/barre_fond.webp) 0 0/100% 100% no-repeat}
+#ronds{display:flex;gap:4px;align-items:center}
+.sep{width:14px}
+.slot{position:relative;width:62px;height:62px;cursor:pointer;display:grid;place-items:center}
+.slot::before{content:'';position:absolute;inset:11%;border-radius:4px;background:radial-gradient(#2a201a,#0b0807)}
+.slot::after{content:'';position:absolute;inset:0;background:url(img/ui/case_bronze.webp) 0 0/100% 100%;pointer-events:none}
+.slot.fer::after{background-image:url(img/ui/case_fer.webp)}
+.slot:hover::after,.slot.flash::after{background-image:url(img/ui/case_or.webp)}
+.slot img{position:relative;width:40px;height:40px;object-fit:contain;filter:drop-shadow(0 2px 2px #000)}
+.slot .h{position:absolute;top:-5px;left:-5px;width:22px;height:22px;display:grid;place-items:center;font:800 11px system-ui;color:var(--or);background:url(img/ui/touche.webp) 0 0/100% 100%;z-index:2}
+.slot .q{position:absolute;bottom:6px;right:8px;font:800 13px system-ui;text-shadow:0 1px 2px #000,0 0 2px #000;z-index:2}
+.slot .cd{position:absolute;inset:11%;border-radius:4px;background:conic-gradient(#000c var(--p,0%),transparent 0);z-index:1}
+.slot .s{position:absolute;inset:0;display:grid;place-items:center;font:800 17px system-ui;text-shadow:0 1px 3px #000;z-index:1}
+.slot.off img{filter:grayscale(1) brightness(.45)}.slot.off{cursor:default}
 .slot.flash{animation:eclat .5s}
-@keyframes eclat{40%{transform:scale(1.12);box-shadow:0 0 18px var(--t)}}
-#xp{position:relative;width:100%;min-width:330px;height:12px;border-radius:6px;background:var(--track);border:1px solid var(--line);overflow:hidden}
-#xp>i{display:block;height:100%;background:linear-gradient(90deg,var(--mait),#e2ae72);width:0;transition:width .3s}
-#xpt{position:absolute;inset:0;text-align:center;font:700 9px/11px system-ui;letter-spacing:1px;text-shadow:0 1px 2px #000}
+@keyframes eclat{40%{transform:scale(1.1)}}
+#xp{width:330px;height:26px}
+#xpt{font:800 10px system-ui!important;letter-spacing:1px}
+#bTal .or{width:16px;height:16px;vertical-align:-3px;margin-left:4px}
 /* Ronds de talent (fenêtre des talents) */
 .rond{position:relative;width:62px;text-align:center;cursor:pointer}
 .rond .o{position:relative;width:56px;height:56px;margin:auto;border-radius:12px;border:4px solid var(--t);background:color-mix(in srgb,var(--t) 22%,#e9e3d5);display:grid;place-items:center;overflow:hidden;box-shadow:0 2px 6px #0008}
@@ -66,9 +67,9 @@ canvas#c{position:fixed;inset:0;width:100%;height:100%;display:block;cursor:poin
 .rond .o b{font-size:24px;color:var(--t)}
 .rond .n{font:600 11px system-ui;margin-top:3px;color:var(--ink);white-space:nowrap}
 /* Boutons */
-.btn{font:600 14px system-ui;background:var(--btn);color:var(--ink);border:1px solid var(--line-strong);border-radius:8px;padding:6px 12px;cursor:pointer}
-.btn:hover{background:var(--hover)}.btn.on{border-color:var(--accent);color:var(--accent)}
-.btn.main{background:var(--accent);color:var(--on-accent);border-color:var(--accent)}
+.btn{font:600 14px system-ui;color:var(--or);background:none;border:10px solid transparent;border-image:url(img/ui/bouton.webp) 36 fill / 10px stretch;padding:0 6px;min-height:36px;cursor:pointer;text-shadow:0 1px 2px #000}
+.btn:hover{border-image-source:url(img/ui/bouton2.webp);color:#fff}.btn.on{border-image-source:url(img/ui/bouton3.webp);color:#ffd77a}
+.btn.main{border-image-source:url(img/ui/bouton3.webp);color:#ffd77a}
 .btn.pulse{animation:pulse 1.2s infinite}@keyframes pulse{50%{box-shadow:0 0 12px var(--mait)}}
 #top{position:fixed;right:12px;top:12px;display:flex;gap:6px}
 /* Journal */
@@ -78,12 +79,17 @@ canvas#c{position:fixed;inset:0;width:100%;height:100%;display:block;cursor:poin
 .de.dark{color:#f4f6f2}.de.x{opacity:.3;text-decoration:line-through}.de.b{opacity:.45}.de.p{outline:1px solid #ffd34a}
 .hro{color:var(--green);font-weight:700}.adv{color:#e2565f;font-weight:700}
 /* Bulle (infobulle d'adversaire / de talent) */
-#tip{position:fixed;pointer-events:none;max-width:280px;padding:8px 10px;font-size:13px;display:none;z-index:9}
+#tip{position:fixed;pointer-events:none;max-width:300px;padding:2px 4px;font-size:13px;display:none;z-index:9}
 #tip h4{margin:0 0 4px;font:700 16px 'Killam',Georgia,serif;color:var(--t,var(--ink))}
 #tip p{margin:3px 0}
 /* Barre de boss */
-#boss{position:fixed;top:14px;left:50%;transform:translateX(-50%);width:420px;text-align:center;display:none}
-#boss .bar{width:100%;height:14px}
+#boss{position:fixed;top:10px;left:50%;transform:translateX(-50%);width:440px;text-align:center;display:none}
+#bossn{height:40px;line-height:34px;background:url(img/ui/banniere.webp) center/100% 100% no-repeat;font-size:16px;color:#fff;text-shadow:0 1px 3px #000}
+.jauge{position:relative;height:36px;background:url(img/ui/jauge_cadre.webp) 0 0/100% 100%}
+.jauge::before,.jauge>i{content:'';position:absolute;left:11.3%;top:25.6%;height:46.4%;width:77.4%;background:url(img/ui/jauge_fond.webp) 0 0/100% 100%}
+.jauge>i{width:calc(77.4% * var(--f,1));background-image:url(img/ui/jauge_rouge.webp);transition:width .25s}
+.jauge.or>i{background-image:url(img/ui/jauge_or.webp)}
+.jauge>span{position:absolute;inset:0;display:grid;place-items:center;font:800 11px system-ui;text-shadow:0 1px 2px #000,0 0 2px #000}
 /* Fenêtres */
 .dlg{position:fixed;inset:0;background:#0008;display:none;place-items:center;z-index:10}
 .dlg.on{display:grid}
@@ -103,36 +109,32 @@ canvas#c{position:fixed;inset:0;width:100%;height:100%;display:block;cursor:poin
 #edit .row,.reg{display:flex;gap:6px;flex-wrap:wrap;margin:6px 0;align-items:center}
 .reg{font:600 12px system-ui;color:var(--muted);justify-content:space-between}.reg input{width:100%}
 #edMsg{font-size:12px;color:var(--accent);min-height:1em;margin:4px 0}
-body.edition #bar,body.edition #frame,body.edition #journal{display:none}
+body.edition #bar,body.edition #frame,body.edition #fsous,body.edition #journal{display:none}
 #mj .row{display:flex;gap:6px;flex-wrap:wrap;margin:6px 0}
 #fin{z-index:11}
 #fin .win{text-align:center;width:420px}
-@media (max-width:900px){.orbe{width:64px;height:64px}.slot{width:46px;height:46px}.slot img{width:34px;height:34px}#xp{min-width:200px}#pwrap{width:64px;height:64px}#portrait{width:54px;height:54px}}
+@media (max-width:900px){#bar{transform:translateX(-50%) scale(.72);transform-origin:bottom center}#frame,#fsous{transform:scale(.75);transform-origin:top left}#fsous{top:110px}}
 @media (prefers-reduced-motion:reduce){.slot.flash,.btn.pulse{animation:none}}
 </style>
 </head>
 <body>
 <canvas id="c"></canvas>
-<div id="frame" class="panel">
- <div id="pwrap"><canvas id="portrait" width="152" height="152"></canvas><span id="pvtxt"></span></div>
- <div>
-  <div id="fname" class="k">Hrolf</div>
-  <div class="cart" id="fcart">Destructeur · palier I</div>
-  <div class="pills" id="fstats"></div>
-  <div class="pills" id="fetats"></div>
- </div>
+<div id="frame">
+ <canvas id="portrait" width="216" height="216"></canvas>
+ <div id="fplaque"><div id="fname" class="k">Hrolf</div><div class="cart" id="fcart">Destructeur · palier I</div><div id="fvie"></div></div>
 </div>
-<div id="boss" class="panel" style="padding:6px 10px"><div class="k" id="bossn"></div><div class="bar"><i></i><span></span></div></div>
+<div id="fsous"><div class="pills" id="fstats"></div><div class="pills" id="fetats"></div></div>
+<div id="boss"><div class="k" id="bossn"></div><div class="jauge"><i></i><span></span></div></div>
 <div id="top">
  <button class="btn" id="bTal">Talents (T)</button>
  <button class="btn" id="bMJ">MJ (M)</button>
  <button class="btn" id="bPause">Pause (Espace)</button>
 </div>
 <div id="journal" class="panel"></div>
-<div id="bar" class="panel">
- <div class="orbe" id="oPV"><i></i><span></span><small>PV</small></div>
- <div id="centre"><div id="ronds"></div><div id="xp"><i></i><span id="xpt"></span></div></div>
- <div class="orbe" id="oRage"><i></i><span></span><small>Rage</small></div>
+<div id="bar">
+ <div class="orbe" id="oPV" style="--o:url(img/ui/orbe_pv.webp)"><i class="v"></i><i class="p"></i><span></span><small>PV</small></div>
+ <div id="centre"><div id="ronds"></div><div id="xp" class="jauge or"><i></i><span id="xpt"></span></div></div>
+ <div class="orbe" id="oRage" style="--o:url(img/ui/orbe_rage.webp)"><i class="v"></i><i class="p"></i><span></span><small>Rage</small></div>
 </div>
 <div id="mj" class="panel">
  <div class="sec">Meneur de jeu</div>
@@ -158,7 +160,7 @@ body.edition #bar,body.edition #frame,body.edition #journal{display:none}
 <div class="dlg" id="fin"><div class="win panel"><h2 style="justify-content:center" id="finT"></h2><p id="finP"></p><button class="btn main" id="bRe">Recommencer</button></div></div>
 <script>
 'use strict';
-const VERSION='0.5';
+const VERSION='0.6';
 document.title='Amertüme ISO v'+VERSION;
 
 /* ================= Règles d'Amertüme (moteur d'Amertüme Online, adapté au temps réel) =================
@@ -270,6 +272,7 @@ function ligneLibre(x0,y0,x1,y1){const n=Math.ceil(Math.hypot(x1-x0,y1-y0)/8);fo
 const IMG={},img=s=>{if(!IMG[s]){const i=new Image();i.src=s;IMG[s]=i}return IMG[s]},ok=i=>i&&i.complete&&i.naturalWidth;
 // Hrolf : planche 6 × 7 découpée en bandes de 6 images ; découpée par tools/decoupe_hrolf.py : images alignées sur les pieds, toutes tournées vers la droite.
 const HANIM={n:6,pieds:.968,poses:['idle','walk','atk','furie','cri','sol','mort']};
+['ellipse_sol','fine_cadre_fer','fine_rouge'].forEach(n=>img('img/ui/'+n+'.webp'));
 img(CARTE.fond);for(const p of HANIM.poses)img('img/u/hrolf_'+p+'.webp');
 for(const s in ANIM)for(const p of ANIM[s].poses)img('img/m/'+s+'_'+p+'.webp');
 for(const s of Object.keys(MS).filter(s=>!ANIM[s]))for(const p of ['w1','w2','atk','dead']){img('img/m/'+s+'_'+p+'.webp');if(p!=='dead')img('img/m/'+s+'_'+p+'_rim.webp')}
@@ -367,7 +370,7 @@ function step(dt){S.t+=dt;
  if(!hero.coma&&hero.auSol<=0){
   if(hero.cible&&hero.cible.pv<=0)hero.cible=null;
   if(hero.cible){if(contact(hero,hero.cible))hero.path=[];else if(!hero.path.length||S.t>(hero.repath||0)){hero.path=chemin(hero.x,hero.y,hero.cible.x,hero.cible.y);hero.repath=S.t+.3}}
-  if(hero.path.length){const p=hero.path[0],dx=p.x-hero.x,dy=p.y-hero.y,d=Math.hypot(dx,dy),sp=78*dt;
+  if(hero.path.length){const p=hero.path[0],dx=p.x-hero.x,dy=p.y-hero.y,d=Math.hypot(dx,dy),sp=64*dt;
    if(Math.abs(dx)>1)hero.face=dx>0?1:-1;if(d<=sp){hero.x=p.x;hero.y=p.y;hero.path.shift()}else{hero.x+=dx/d*sp;hero.y+=dy/d*sp}hero.walk+=Math.min(d,sp)}
   else{hero.walk=0;if(S.t>=hero.prochain){const c=hero.cible&&contact(hero,hero.cible)?hero.cible:null;if(c||vivants().some(m=>contact(hero,m)&&m.aggro))attaqueHeros(c)}}}
  // Adversaires
@@ -419,21 +422,22 @@ function spark(x,y,c,n){for(let k=0;k<n;k++){const a=Math.random()*6.28,s=60+Mat
 function ombre(x,y,rx,ry,a){g.save();g.translate(x,y);g.scale(1,ry/rx);const gr=g.createRadialGradient(0,0,0,0,0,rx);gr.addColorStop(0,`rgba(0,0,0,${a})`);gr.addColorStop(1,'rgba(0,0,0,0)');g.fillStyle=gr;g.beginPath();g.arc(0,0,rx,0,7);g.fill();g.restore()}
 function anneau(x,y,rx,c,w){g.strokeStyle=c;g.lineWidth=w||2;g.beginPath();g.ellipse(x,y,rx,rx*.45,0,0,7);g.stroke()}
 function anime(pose,dur){hero.anim={pose,t:S.t,dur}}
-function drawHero(t){const u=hero;ombre(u.x,u.y+1,13,5,.45);anneau(u.x,u.y,15,`rgba(255,210,122,${.55+Math.sin(t*3)*.25})`);
+function drawHero(t){const u=hero;ombre(u.x,u.y+1,13,5,.45);const el=IMG['img/ui/ellipse_sol.webp'];if(ok(el)){g.globalAlpha=.75+Math.sin(t*3)*.2;g.drawImage(el,u.x-17,u.y-7,34,14.4);g.globalAlpha=1}
  if(u.etats.Rage)anneau(u.x,u.y,19,'rgba(212,85,42,.75)',1.5+Math.min(4,u.etats.Rage*.3));
  // Une animation jouée (attaque, Frappe Furieuse, Cri, au sol, mort) passe avant la marche et le repos ; la mort et le Coma restent couchés.
- const a=u.anim,k=a?(S.t-a.t)/a.dur:1;let pose,f;
+ const a=u.anim,k=a?(S.t-a.t)/a.dur:1;let pose,f,souffle=1;
  if(u.mort){pose='mort';f=Math.floor(Math.min(.99,k)*6)}else if(u.coma){pose='sol';f=3}
- else if(a&&k<1){pose=a.pose;f=Math.floor(k*6)}else if(u.walk>0){pose='walk';f=Math.floor(u.walk/6.5)%6}else{pose='idle';f=Math.floor(t*6)%6}
+ else if(a&&k<1){pose=a.pose;f=Math.floor(k*6)}else if(u.walk>0){pose='walk';f=Math.floor(u.walk/4.8)%6}else{pose='idle';f=0;souffle=1+Math.sin(t*2.4)*.012}
  const im=IMG['img/u/hrolf_'+pose+'.webp'];if(!ok(im))return;const fw=im.naturalWidth/6,fh=im.naturalHeight,w=fw/2,h=fh/2;
- g.save();g.translate(u.x,u.y);g.scale(u.face,1);if(u.coma&&!u.mort)g.filter='grayscale(.6) brightness(.8)';g.drawImage(im,f*fw,0,fw,fh,-w/2,-h*HANIM.pieds,w,h);g.restore()}
+ g.save();g.translate(u.x,u.y);g.scale(u.face,souffle);if(u.coma&&!u.mort)g.filter='grayscale(.6) brightness(.8)';g.drawImage(im,f*fw,0,fw,fh,-w/2,-h*HANIM.pieds,w,h);g.restore()}
 function drawMon(m,t,hov){const sp=m.d.spr,pose=m.atk>0?'atk':m.walk>0&&Math.floor(m.walk/2.4)%2?'w2':'w1',rim=IMG['img/m/'+sp+'_'+pose+'_rim.webp'],im0=IMG['img/m/'+sp+'_'+pose+'.webp'],useR=ok(rim),im=useR?rim:im0;
  ombre(m.x,m.y+1,m.w*.34+3,m.w*.11+2.5,.45);if(hov||m===hero.cible)anneau(m.x,m.y,m.w*.42+6,'#e2565f',2);else if(m.d.boss)anneau(m.x,m.y,m.w*.42+6,'rgba(226,86,95,.45)',2);
  if(ANIM[sp])return drawAnim(m,t,hov);
  if(!ok(im))return;const pd=useR?2:0,w=im.naturalWidth/2-pd*2,h=im.naturalHeight/2-pd*2,iw=MS[sp][0],bob=pose==='atk'?0:Math.abs(Math.sin(m.walk*1.3))*m.h*.03;
  g.save();g.translate(m.x,m.y);g.scale(m.face,1);if(m.etats.Feu)g.filter='sepia(.8) saturate(2.6) brightness(1.1)';else if(hov)g.filter='brightness(1.25)';
  g.drawImage(im,(pose==='atk'?-iw/2:-w/2)-pd,-h+2-bob-pd,w+pd*2,h+pd*2);g.restore();barreVie(m,hov)}
-function barreVie(m,hov){if(m.pv<m.d.pv||hov||m.aggro){const bw=Math.max(26,m.w*.6),y=m.y-m.h-8;g.fillStyle='#000a';g.fillRect(m.x-bw/2-1,y-1,bw+2,5);g.fillStyle='#c0392b';g.fillRect(m.x-bw/2,y,bw*Math.max(0,m.pv/m.d.pv),3);
+function barreVie(m,hov){if(m.pv<m.d.pv||hov||m.aggro){const bw=Math.max(30,m.w*.65),bh=bw*48/221,y=m.y-m.h-8,cf=IMG['img/ui/fine_cadre_fer.webp'],fr=IMG['img/ui/fine_rouge.webp'];
+  if(ok(cf)&&ok(fr)){const x0=m.x-bw/2;g.fillStyle='#000c';g.fillRect(x0+bw*.068,y-bh/2+bh*.31,bw*.86,bh*.36);g.drawImage(fr,x0+bw*.068,y-bh/2+bh*.31,bw*.86*Math.max(0,m.pv/m.d.pv),bh*.36);g.drawImage(cf,x0,y-bh/2,bw,bh)}
   let ex=m.x-bw/2;for(const [e,n] of Object.entries(m.etats)){if(!n)continue;const ic=ETAT_IC[e]?img(ETAT_IC[e]):null;if(ok(ic))g.drawImage(ic,ex,y-12,10,10);ex+=11}}}
 function frameAnim(sp,pose,f,x,y,face,filt,rot){const A=ANIM[sp],im=IMG['img/m/'+sp+'_'+pose+'.webp'];if(!ok(im))return;const fw=im.naturalWidth/A.n,fh=im.naturalHeight,w=fw/2,h=fh/2;
  g.save();g.translate(x,y);if(rot)g.rotate(rot);g.scale(face,1);if(filt)g.filter=filt;g.drawImage(im,Math.min(A.n-1,f)*fw,0,fw,fh,-w/2,-h*A.pieds,w,h);g.restore()}
@@ -464,7 +468,7 @@ const dispo=()=>marques()-hero.depense;
 function rondHtml(k,o){o=o||{};const T=TAL[k],ty=tType(k),c='var(--'+ty+')';
  return `<div class="rond ${o.cls||''}" id="${o.id||''}" data-tal="${k}" style="--t:${c}"><div class="o">${T.ic?`<img src="img/talents/${T.ic}.png" alt="">`:`<b>${GLYPH[ty]}</b>`}${o.cd?'<div class="cd"></div>':''}</div>${o.h?`<span class="h">${o.h}</span>`:''}${o.q!==undefined?`<span class="q">${o.q}</span>`:''}<div class="n">${T.nom}</div></div>`}
 // Une case de la barre d'action : icône, touche, compteur, recharge.
-const slot=(id,k,t,icone,touche,q,cd)=>`<div class="slot" id="${id}" data-k="${k}" style="--t:var(--${t})"><img src="${icone}" alt="">${cd?'<div class="cd"></div><div class="s"></div>':''}${touche?`<span class="h">${touche}</span>`:''}${q!==undefined?`<span class="q">${q}</span>`:''}</div>`;
+const slot=(id,k,t,icone,touche,q,cd)=>`<div class="slot${t==='ame'||t==='green'?' fer':''}" id="${id}" data-k="${k}" style="--t:var(--${t})"><img src="${icone}" alt="">${cd?'<div class="cd"></div><div class="s"></div>':''}${touche?`<span class="h">${touche}</span>`:''}${q!==undefined?`<span class="q">${q}</span>`:''}</div>`;
 function majRonds(){let h=slot('r_auto','auto','act','img/i/hache.png','',undefined,1);
  if(has('frappe'))h+=slot('r_frappe','frappe','act','img/talents/talent_attaque.png','1',undefined,1);
  if(has('cri'))h+=slot('r_cri','cri','bonus','img/talents/talent_provocation.png','2');
@@ -474,21 +478,20 @@ function flashRond(id){const e=$(id);if(!e)return;e.classList.remove('flash');vo
 let sig='';
 function majTout(){const s=[...hero.talents].join()+hero.potions+'|'+hero.reposCourts+hero.vie;if(s!==sig){sig=s;majRonds()}
  const pm=pvMax(),pv=Math.max(0,hero.pv),fr=pv/pm*100,rage=hero.etats.Rage||0;
- $('pwrap').style.setProperty('--pv',fr+'%');$('pvtxt').textContent=pv+' / '+pm;
- $('oPV').style.setProperty('--f',fr+'%');$('oPV').querySelector('span').textContent=pv;
+ $('oPV').style.setProperty('--f',fr+'%');$('oPV').querySelector('span').textContent=pv;$('oPV').title=pv+' / '+pm+' PV';
  $('oRage').style.setProperty('--f',Math.min(100,rage*10)+'%');$('oRage').querySelector('span').textContent=rage;
- let v='';for(let k=0;k<hero.vieMax;k++)v+=`<img class="vie${k<hero.vie?' on':''}" src="img/etats/vie.png" alt="VIE">`;
- const ca=(n,x,t)=>`<span class="carac" title="${t}"><small>${n}</small><b>${x}</b></span>`;
- $('fstats').innerHTML=ca('DEF',hero.auSol>0?0:hero.def,'Défense')+ca('DÉG','+'+bonusDeg(),'Bonus de Dégâts')+ca('END',hero.endu,'Endurance')+ca('VIE',`<span style="display:flex;gap:1px">${v}</span>`,'VIE');
+ let v='';for(let k=0;k<hero.vieMax;k++)v+=`<img src="img/ui/pastille_${k<hero.vie?'verte':'vide'}.webp" alt="">`;$('fvie').innerHTML=v;$('fvie').title='VIE '+hero.vie+' / '+hero.vieMax;
+ const ca=(n,x,t)=>`<span class="carac" title="${t}" style="background-image:url(img/ui/carac_${n}.webp)"><b>${x}</b></span>`;
+ $('fstats').innerHTML=ca('def',hero.auSol>0?0:hero.def,'DEF')+ca('deg','+'+bonusDeg(),'Bonus de Dégâts')+ca('force',hero.endu,'Endurance')+ca('vie',hero.vie,'VIE');
  $('fetats').innerHTML=Object.entries(hero.etats).filter(([,n])=>n).map(([e,n])=>`<span class="pill etat" style="--t:${ETATS[e]}">${ETAT_IC[e]?`<img src="${ETAT_IC[e]}" alt="">`:''}${e} ${n}</span>`).join('')+(hero.enrag?`<span class="pill etat" style="--t:${ETATS.Rage}">Enragement +${hero.enrag}</span>`:'')+(hero.coma?`<span class="pill etat" style="--t:${ETATS.Coma}">Coma</span>`:'');
- const x=hero.xp%100;$('xp').firstElementChild.style.width=x+'%';$('xpt').textContent='XP '+hero.xp+' / '+(marques()+1)*100+(dispo()>0?' · '+dispo()+' Marque'+(dispo()>1?'s':'')+' à dépenser':'');
- $('bTal').classList.toggle('pulse',dispo()>0);$('bTal').textContent='Talents (T)'+(dispo()>0?' · '+dispo():'');
+ const x=hero.xp%100;$('xp').style.setProperty('--f',x/100);$('xpt').textContent='XP '+hero.xp+' / '+(marques()+1)*100+(dispo()>0?' · '+dispo()+' Marque'+(dispo()>1?'s':'')+' à dépenser':'');
+ $('bTal').classList.toggle('pulse',dispo()>0);$('bTal').innerHTML='Talents (T)'+(dispo()>0?'<img class="or" src="img/ui/pastille_or.webp" alt=""> '+dispo():'');
  $('r_repos')&&$('r_repos').classList.toggle('off',S.combat||!hero.reposOk||hero.reposCourts>=hero.vie||hero.coma);
  $('r_potion')&&$('r_potion').classList.toggle('off',!hero.potions||hero.coma);
  $('r_cri')&&$('r_cri').classList.toggle('off',!!hero.criUtilise||hero.coma)}
 function majCd(){const a=$('r_auto');if(a){const r=Math.max(0,hero.prochain-S.t)/(hero.arme.cadence||CADENCE_2M);a.querySelector('.cd').style.setProperty('--p',Math.min(1,r)*100+'%')}
  const f=$('r_frappe');if(f){const t=Math.max(0,hero.cd.frappe-S.t),r=t/TOUR;f.querySelector('.cd').style.setProperty('--p',r*100+'%');f.querySelector('.s').textContent=t>0?Math.ceil(t):'';f.classList.toggle('off',r>0||hero.coma)}
- const b=vivants().find(m=>m.d.boss&&m.aggro);$('boss').style.display=b?'block':'none';if(b){$('bossn').textContent=b.d.nom;$('boss').querySelector('i').style.width=b.pv/b.d.pv*100+'%';$('boss').querySelector('span').textContent=b.pv+' / '+b.d.pv}}
+ const b=vivants().find(m=>m.d.boss&&m.aggro);$('boss').style.display=b?'block':'none';if(b){$('bossn').textContent=b.d.nom;$('boss').querySelector('.jauge').style.setProperty('--f',b.pv/b.d.pv);$('boss').querySelector('span').textContent=b.pv+' / '+b.d.pv}}
 // Arbre de talents : 1 Marque chacun ; une amélioration exige son talent de base.
 function majArbre(){$('marques').textContent='Marques à dépenser : '+dispo()+' · dépensées : '+hero.depense;
  const bases=Object.keys(TAL).filter(k=>!TAL[k].de);
