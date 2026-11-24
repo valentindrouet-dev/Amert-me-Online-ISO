@@ -1,0 +1,467 @@
+<!doctype html>
+<html lang="fr">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Amertüme ISO</title>
+<style>
+@font-face{font-family:'Killam';src:url('fonts/killam-bold.woff2') format('woff2');font-weight:700}
+/* Couleurs : thème sombre de la charte d'Amertüme Online (body.sombre). */
+:root{color-scheme:dark;--bg:#10171a;--panel:#182226;--panel-2:#131d21;--btn:#243136;--hover:#26343a;--track:#0d1417;
+ --line:#2d393d;--line-strong:#526065;--muted:#a4b1b5;--ink:#edf0e9;--accent:#e2ae72;--on-accent:#201b15;--green:#8ab5a0;--red-mat:#d4735a;
+ --act:#4f7fb5;--mvt:#8a6440;--reac:#8b6bb5;--pass:#8a8474;--crit:#b5525a;--ame:#5e9a5b;--mait:#c99a3c;--bonus:#2a9d8f}
+*{box-sizing:border-box}
+html,body{margin:0;height:100%;background:#000;color:var(--ink);font:16px system-ui,sans-serif;overflow:hidden;user-select:none}
+canvas#c{position:fixed;inset:0;width:100%;height:100%;display:block;cursor:pointer}
+.k{font-family:'Killam',Georgia,serif;font-weight:700}
+.panel{background:color-mix(in srgb,var(--panel) 92%,transparent);border:1px solid var(--line-strong);border-radius:12px}
+.sec{font:600 12px system-ui;letter-spacing:2.5px;text-transform:uppercase;color:var(--muted)}
+/* Cadre du héros */
+#frame{position:fixed;left:12px;top:12px;display:flex;gap:10px;padding:10px 12px;align-items:flex-start;min-width:300px}
+#portrait{width:64px;height:64px;border-radius:50%;border:3px solid var(--mait);background:var(--panel-2);flex:none}
+#fname{font-size:20px;line-height:1.1}
+.cart{display:inline-block;font:700 11px system-ui;letter-spacing:2px;text-transform:uppercase;padding:2px 8px;border-radius:10px;background:#b0452e;color:#fff;margin:3px 0 6px}
+.bar{position:relative;height:16px;border-radius:8px;background:var(--track);border:1px solid var(--line);overflow:hidden;width:220px}
+.bar>i{position:absolute;inset:0 auto 0 0;background:linear-gradient(#d4735a,#a4442f);transition:width .2s}
+.bar>span{position:absolute;inset:0;text-align:center;font:700 11px/15px system-ui;text-shadow:0 1px 2px #000}
+.pills{display:flex;gap:6px;margin-top:6px;flex-wrap:wrap;align-items:center}
+.pill{display:inline-flex;align-items:center;gap:3px;font:700 12px system-ui;padding:1px 7px;border-radius:9px;background:var(--btn);border:1px solid var(--line)}
+.pill img{width:16px;height:16px}
+.etat{border-color:var(--t);color:var(--t);background:color-mix(in srgb,var(--t) 15%,var(--panel))}
+.vie{width:16px;height:16px;opacity:.25}.vie.on{opacity:1}
+/* Barre d'actions : ronds de talent */
+#bar{position:fixed;left:50%;bottom:12px;transform:translateX(-50%);padding:10px 14px 8px;display:flex;flex-direction:column;align-items:center;gap:6px}
+#ronds{display:flex;gap:12px;align-items:flex-end}
+.rond{position:relative;width:62px;text-align:center;cursor:pointer}
+.rond .o{position:relative;width:56px;height:56px;margin:auto;border-radius:50%;border:4px solid var(--t);background:color-mix(in srgb,var(--t) 22%,#e9e3d5);display:grid;place-items:center;overflow:hidden;box-shadow:0 2px 6px #0008}
+.rond .o img{width:40px;height:40px;object-fit:contain}
+.rond .o b{font-size:24px;color:var(--t)}
+.rond .n{font:600 11px system-ui;margin-top:3px;color:var(--ink);white-space:nowrap}
+.rond .h{position:absolute;top:-4px;right:0;font:700 11px system-ui;background:var(--panel-2);border:1px solid var(--line-strong);border-radius:6px;padding:0 4px}
+.rond .cd{position:absolute;inset:0;border-radius:50%;background:conic-gradient(#000b var(--p,0%),transparent 0)}
+.rond .q{position:absolute;bottom:18px;right:-2px;font:700 12px system-ui;background:var(--panel);border-radius:8px;padding:0 4px}
+.rond.off .o{filter:grayscale(1) brightness(.6)}
+.rond.flash .o{animation:eclat .5s}
+@keyframes eclat{40%{transform:scale(1.15);box-shadow:0 0 18px var(--t)}}
+#xp{width:420px;height:8px;border-radius:4px;background:var(--track);border:1px solid var(--line);overflow:hidden}
+#xp>i{display:block;height:100%;background:linear-gradient(90deg,var(--mait),#e2ae72);width:0}
+#xpt{font:600 11px system-ui;color:var(--muted)}
+/* Boutons */
+.btn{font:600 14px system-ui;background:var(--btn);color:var(--ink);border:1px solid var(--line-strong);border-radius:8px;padding:6px 12px;cursor:pointer}
+.btn:hover{background:var(--hover)}.btn.on{border-color:var(--accent);color:var(--accent)}
+.btn.main{background:var(--accent);color:var(--on-accent);border-color:var(--accent)}
+.btn.pulse{animation:pulse 1.2s infinite}@keyframes pulse{50%{box-shadow:0 0 12px var(--mait)}}
+#top{position:fixed;right:12px;top:12px;display:flex;gap:6px}
+/* Journal */
+#journal{position:fixed;right:12px;top:58px;width:340px;max-height:46vh;overflow:auto;padding:8px;display:flex;flex-direction:column;gap:4px}
+#journal .l{font-size:13px;line-height:1.35;padding:4px 8px;border-radius:9px;border:1px solid color-mix(in srgb,var(--t) 55%,transparent);background:color-mix(in srgb,var(--t) 14%,var(--panel))}
+.de{display:inline-block;min-width:16px;height:16px;line-height:16px;text-align:center;border-radius:4px;font:700 11px system-ui;color:#201b15;background:var(--d);margin:0 1px;vertical-align:-2px;box-shadow:inset 0 0 0 1px #0006}
+.de.dark{color:#f4f6f2}.de.x{opacity:.3;text-decoration:line-through}.de.b{opacity:.45}.de.p{outline:1px solid #ffd34a}
+.hro{color:var(--green);font-weight:700}.adv{color:#e2565f;font-weight:700}
+/* Bulle (infobulle d'adversaire / de talent) */
+#tip{position:fixed;pointer-events:none;max-width:280px;padding:8px 10px;font-size:13px;display:none;z-index:9}
+#tip h4{margin:0 0 4px;font:700 16px 'Killam',Georgia,serif;color:var(--t,var(--ink))}
+#tip p{margin:3px 0}
+/* Barre de boss */
+#boss{position:fixed;top:14px;left:50%;transform:translateX(-50%);width:420px;text-align:center;display:none}
+#boss .bar{width:100%;height:14px}
+/* Fenêtres */
+.dlg{position:fixed;inset:0;background:#0008;display:none;place-items:center;z-index:10}
+.dlg.on{display:grid}
+.win{width:min(760px,94vw);max-height:88vh;overflow:auto;padding:16px 18px}
+.win h2{margin:0 0 10px;font:700 24px 'Killam',Georgia,serif;display:flex;justify-content:space-between}
+.x{cursor:pointer;color:var(--muted)}
+.arbre{display:grid;grid-template-columns:repeat(auto-fill,minmax(170px,1fr));gap:12px}
+.branche{padding:10px;border-radius:10px;background:var(--panel-2);border:1px solid var(--line)}
+.branche .rond{width:auto;margin:auto}
+.ames{display:flex;justify-content:center;gap:6px;margin-top:8px;flex-wrap:wrap}
+.ames .rond{width:58px}.ames .rond .o{width:38px;height:38px;border-width:3px}.ames .rond .o b{font-size:16px}
+.rond.ok .o{box-shadow:0 0 10px var(--t)}
+.rond.lock{opacity:.45;cursor:default}
+#mj{position:fixed;right:12px;bottom:12px;padding:10px;display:none;width:240px}
+#mj.on{display:block}
+#mj .row{display:flex;gap:6px;flex-wrap:wrap;margin:6px 0}
+#fin{z-index:11}
+#fin .win{text-align:center;width:420px}
+@media (max-width:900px){#journal{display:none}#frame{min-width:0}.bar{width:150px}#xp{width:240px}}
+@media (prefers-reduced-motion:reduce){.rond.flash .o,.btn.pulse{animation:none}}
+</style>
+</head>
+<body>
+<canvas id="c"></canvas>
+<div id="frame" class="panel">
+ <canvas id="portrait" width="128" height="128"></canvas>
+ <div>
+  <div id="fname" class="k">Hrolf</div>
+  <div class="cart" id="fcart">Destructeur · palier I</div>
+  <div class="bar" id="pvbar"><i></i><span></span></div>
+  <div class="pills" id="fstats"></div>
+  <div class="pills" id="fetats"></div>
+ </div>
+</div>
+<div id="boss" class="panel" style="padding:6px 10px"><div class="k" id="bossn"></div><div class="bar"><i></i><span></span></div></div>
+<div id="top">
+ <button class="btn" id="bTal">Talents (T)</button>
+ <button class="btn" id="bMJ">MJ (M)</button>
+ <button class="btn" id="bPause">Pause (Espace)</button>
+</div>
+<div id="journal" class="panel"></div>
+<div id="bar" class="panel"><div id="ronds"></div><div id="xp"><i></i></div><div id="xpt"></div></div>
+<div id="mj" class="panel">
+ <div class="sec">Meneur de jeu</div>
+ <div class="row" id="mjSpawn"></div>
+ <div class="row"><button class="btn" id="mjLong">Repos long</button><button class="btn" id="mjAggro">Zones</button></div>
+ <div class="row" id="mjXp"></div>
+</div>
+<div id="tip" class="panel"></div>
+<div class="dlg" id="dTal"><div class="win panel"><h2><span>Talents du Destructeur</span><span class="x" data-close>✕</span></h2><div id="marques" class="sec" style="margin-bottom:10px"></div><div class="arbre" id="arbre"></div></div></div>
+<div class="dlg" id="fin"><div class="win panel"><h2 style="justify-content:center" id="finT"></h2><p id="finP"></p><button class="btn main" id="bRe">Recommencer</button></div></div>
+<script>
+'use strict';
+const VERSION='0.1';
+document.title='Amertüme ISO v'+VERSION;
+
+/* ================= Règles d'Amertüme (moteur d'Amertüme Online, adapté au temps réel) =================
+   Dés : W Simple, L Léger, R Lourd, B Mystique, S Soin, M Mortel, P Phase, V Poison. Tous des d6. */
+const DES={W:['Simple','#ece7db'],L:['Léger','#dcb87f'],R:['Lourd','#c0392b',1],B:['Mystique','#3f7bc0',1],S:['Soin','#5fa45f'],M:['Mortel','#2b2b2b',1],P:['Phase','#d8c13a'],V:['Poison','#7b4bb3',1]};
+const ETATS={Rage:'#d4552a',Saignée:'#e2565f',Feu:'#f0903a',Poison:'#b968d3','Au sol':'#d39568',Coma:'#8a8474'};
+const ETAT_IC={Saignée:'img/etats/saignee.png',Feu:'img/etats/feu.png',Poison:'img/etats/poison.png','Au sol':'img/etats/ausol.png'};
+const TOUR=6;            // un « tour » en temps réel, en secondes : rythme des PA, du Feu
+const CADENCE=2,CADENCE_2M=3.5; // carte dynamique d'Amertüme Online : 2 s, 3,5 s à deux mains, sauf cadence d'arme
+const d6=()=>1+Math.floor(Math.random()*6);
+/* Lancer : les dés Légers doublés s'en vont, deux 1 = échec (hors Mortel/Poison), deux 6 = critique (Destructeur au contact :
+   tout double hors 1) ; au critique, un dé de la première couleur, encore un tant qu'il fait 6. */
+function lancer(des,o){o=o||{};const d=[...des].map(c=>({c,v:d6()}));
+ d.forEach((x,i)=>{if(x.c==='L'&&d.some((y,j)=>j!==i&&y.v===x.v))x.out=1});
+ const k=d.filter(x=>!x.out);
+ if(k.filter(x=>x.v===1&&x.c!=='M'&&x.c!=='V').length>=2)return{d,echec:1};
+ let crit=k.filter(x=>x.v===6).length>=2;
+ if(!crit&&o.doubles){const n={};k.forEach(x=>n[x.v]=(n[x.v]||0)+1);crit=Object.keys(n).some(v=>v!=='1'&&n[v]>=2)}
+ if(crit){let x,g=0;do{x={c:des[0],v:d6(),plus:1};d.push(x);k.push(x)}while(x.v===6&&++g<20)}
+ return{d,k,crit}}
+/* Résoudre contre une DEF : un dé passe si sa face dépasse la DEF ; 6, Lourd et Mortel passent toujours. Mystique doublé si un
+   autre dé gardé a sa face. Si un dé passe : + bonus de Dégâts + Saignée de la cible. */
+function resoudre(l,def,bonus,saignee){if(l.echec)return{total:0,passe:0,poison:0,faces:l.d.map(x=>({...x}))};
+ let total=0,passe=0,poison=0;const faces=l.d.map(x=>{const f={...x};if(x.out)return f;
+  if(!(x.v===6||x.c==='R'||x.c==='M'||x.v>def)){f.bloque=1;return f}
+  let v=x.v;if(x.c==='B'&&l.k.some(y=>y!==x&&y.v===x.v))v*=2;if(x.c==='V')poison+=x.v;total+=v;passe++;f.passe=1;return f});
+ if(passe)total+=Math.max(0,bonus||0)+(saignee||0);return{total,passe,poison,faces}}
+// Auto-contrôle des règles de dés (console).
+(function(){const L=(d,crit)=>({d,k:d.filter(x=>!x.out),crit});
+ const r=resoudre(L([{c:'W',v:5},{c:'R',v:2},{c:'B',v:4},{c:'B',v:4}]),3,2,0);console.assert(r.total===25,'moteur d’Online : chaque Mystique apparié double (5+2+8+8+2)',r);
+ console.assert(resoudre(L([{c:'W',v:3}]),3,2,0).total===0,'DEF bloque');console.assert(resoudre(L([{c:'W',v:6}]),6,0,1).total===7,'6 passe toujours + Saignée');})();
+
+/* ================= Données ================= */
+// Adversaires : fiches du catalogue d'Amertüme Online ; sprites de Defenders.
+const ADV={
+ rodeur:{nom:'Rôdeur famélique',type:'standard',famille:'Bête',pv:6,def:3,degats:2,xp:5,spr:'rodeur',att:[{nom:'Griffes',des:'WW'}]},
+ charo:{nom:'Charognard enragé',type:'standard',famille:'Charognard',pv:8,def:2,degats:3,xp:7,rapide:1,spr:'charo',att:[{nom:'Morsure',des:'WL'}]},
+ mystique:{nom:'Mystique déchu',type:'solitaire',famille:'Humanoïde',pv:14,def:4,degats:2,xp:15,spr:'ombre',distance:1,att:[{nom:'Boule de feu',des:'BB',feu:1}]},
+ colosse:{nom:'Colosse d’Amertume',type:'boss',famille:'Colosse',pv:30,def:5,degats:4,xp:40,spr:'colosse',boss:1,att:[{nom:'Coup massif',des:'RRR'},{nom:'Onde de choc',des:'WW',tous:1,auSol:1}]}};
+// Taille dessinée du pas w1 (½ de la taille du fichier), comme MS dans Defenders.
+const MS={rodeur:[28.5,17],charo:[19.5,27],ombre:[28,29.5],colosse:[93,88]};
+// Talents du Destructeur (combat.js d'Amertüme Online) ; « de » = talent de base d'une amélioration.
+const TAL={
+ destructeur:{nom:'Destructeur',type:'mait',ic:'talent_destructeur',inne:1,txt:'Avec une arme au contact, <b>tous vos doubles</b> sont des critiques ; un double 1 reste un échec.'},
+ rage:{nom:'Rage',type:'mait',inne:1,txt:'Chaque point de <b>Rage</b> : <b>+1</b> aux dégâts au contact. <b>+1 Rage</b> chaque fois que vous subissez des dégâts en combat.'},
+ rage_crit:{nom:'Critiques',de:'rage',txt:'<b>+1 Rage</b> à chaque critique.'},
+ rage_tue:{nom:'Adversaires tués',de:'rage',txt:'<b>+1 Rage</b> à chaque adversaire tué.'},
+ rage_depart:{nom:'Début du combat',de:'rage',txt:'Chaque combat commence avec <b>1d6 Rage</b>.'},
+ rage_infinie:{nom:'Rage Infinie',de:'rage',txt:'Tous vos gains de <b>Rage</b> sont <b>doublés</b>.'},
+ frappe:{nom:'Frappe Furieuse',type:'act',touche:'1',ic:'talent_attaque',txt:'<b>Action</b> : une attaque, puis <b>1 Rage</b>.'},
+ frappe_melee:{nom:'Mêlée',de:'frappe',txt:'<b>+1 Rage</b> par adversaire au contact.'},
+ frappe_saignee:{nom:'Saignée',de:'frappe',txt:'Inflige <b>Saignée</b>.'},
+ frappe_mortelle:{nom:'Mortelle',de:'frappe',txt:'<b>1 dé Mortel</b> de dégâts en plus.'},
+ cri:{nom:'Cri de Guerre',type:'bonus',touche:'2',ic:'talent_provocation',txt:'<b>Action bonus</b>, une fois par combat : un adversaire au contact est <b>repoussé</b> et subit vos dégâts d’Opportunité.'},
+ cri_tous:{nom:'Tous',de:'cri',txt:'<b>Tous les adversaires au contact</b> sont repoussés.'},
+ double:{nom:'Double attaque',type:'pass',ic:'talent_double_attaque',txt:'Votre attaque vise <b>2 adversaires</b> au contact.'},
+ double_tourbillon:{nom:'Tourbillon',de:'double',ic:'talent_tourbillon',txt:'Votre attaque frappe <b>tous les adversaires au contact</b>.'},
+ enrag:{nom:'Enragement',type:'pass',txt:'Chaque <b>critique</b> : <b>+1</b> aux dégâts jusqu’à la fin du combat.'},
+ enrag_plus:{nom:'+2',de:'enrag',txt:'Chaque critique : <b>+2</b> au lieu de +1.'}};
+const GLYPH={act:'⚔',bonus:'⚔',mait:'★',pass:'◆',ame:'⇧',reac:'↩',mvt:'➜'};
+const tType=k=>TAL[k].de?'ame':TAL[k].type;
+
+/* ================= Carte (clairière de Defenders, grille iso 2:1) ================= */
+const WW=1672,WH=941,TW=64,TH=32,OX=905,OY=482;
+const iso=(i,j)=>({x:OX+(i-j)*TW/2,y:OY+(i+j)*TH/2});
+function cellOf(x,y){const a=(x-OX)/(TW/2),b=(y-OY)/(TH/2);return{i:Math.round((a+b)/2),j:Math.round((b-a)/2)}}
+const WALK=new Set();'-14:2_4;-13:1_10;-12:-2_10;-11:-9_-8,-2_11;-10:-9_11;-9:-9_11;-8:-9_12;-7:-9_14;-6:-9_14;-5:-8_14;-4:-9_13;-3:-10_13;-2:-11_12;-1:-15_12;0:-15_-15,-12_12;1:-11_12;2:-11_12;3:-11_12;4:-11_12;5:-10_11;6:-10_11;7:-10_11;8:-11_11;9:-11_5;10:-4_-1,2_5;11:-2_-1'.split(';').forEach(r=>{const [i,rs]=r.split(':');rs.split(',').forEach(x=>{const [a,b]=x.split('_').map(Number);for(let j=a;j<=b;j++)WALK.add(i+','+j)})});
+const ENTRY=[[[-40,-10],[40,54],[110,128],[200,188],[290,232],[360,276],[425,312],[470,338]],[[1710,950],[1590,898],[1510,853],[1430,782],[1350,760],[1270,704],[1210,664],[1160,642]],[[1710,0],[1620,46],[1540,93],[1462,150],[1380,220],[1300,252],[1242,290],[1190,322]],[[-40,950],[40,893],[120,815],[200,762],[280,752],[340,724],[400,666],[455,644]]];
+for(const p of ENTRY)for(let k=0;k+1<p.length;k++){const [x0,y0]=p[k],[x1,y1]=p[k+1],n=Math.ceil(Math.hypot(x1-x0,y1-y0)/6);
+ for(let s=0;s<=n;s++){const x=x0+(x1-x0)*s/n,y=y0+(y1-y0)*s/n;if(x<20||y<20||x>WW-20||y>WH-20)continue;const c=cellOf(x,y);for(let a=-1;a<=1;a++)for(let b=-1;b<=1;b++)WALK.add((c.i+a)+','+(c.j+b))}}
+const walkC=(i,j)=>WALK.has(i+','+j);
+const walkXY=(x,y)=>{if(x<8||y<8||x>WW-8||y>WH-8)return false;const c=cellOf(x,y);return walkC(c.i,c.j)};
+function snap(x,y){if(walkXY(x,y))return{x,y};let best=null,bd=1e9;for(const k of WALK){const [i,j]=k.split(',').map(Number),p=iso(i,j),d=Math.hypot(p.x-x,p.y-y);if(d<bd&&walkXY(p.x,p.y)){bd=d;best=p}}return best}
+// A* sur les cases, 8 voisins, puis lissage en ligne droite.
+function chemin(x0,y0,x1,y1){const a=cellOf(x0,y0),b=cellOf(x1,y1);if(!walkC(b.i,b.j)){const s=snap(x1,y1);if(!s)return[];const c=cellOf(s.x,s.y);b.i=c.i;b.j=c.j;x1=s.x;y1=s.y}
+ const K=(i,j)=>i+','+j,h=(i,j)=>Math.hypot(i-b.i,j-b.j),open=[[h(a.i,a.j),a.i,a.j]],g=new Map([[K(a.i,a.j),0]]),from=new Map();let n=0,found=false;
+ while(open.length&&n++<5000){let bi=0;for(let q=1;q<open.length;q++)if(open[q][0]<open[bi][0])bi=q;const [,i,j]=open.splice(bi,1)[0];
+  if(i===b.i&&j===b.j){found=true;break}const gc=g.get(K(i,j));
+  for(const [u,v] of [[1,0],[-1,0],[0,1],[0,-1],[1,1],[1,-1],[-1,1],[-1,-1]]){const ni=i+u,nj=j+v;if(!walkC(ni,nj))continue;if(u&&v&&(!walkC(i+u,j)||!walkC(i,j+v)))continue;
+   const ng=gc+(u&&v?1.414:1),k=K(ni,nj);if(ng<(g.get(k)??1e9)){g.set(k,ng);from.set(k,K(i,j));open.push([ng+h(ni,nj),ni,nj])}}}
+ if(!found)return[{x:x1,y:y1}];const pts=[];for(let k=K(b.i,b.j);k&&k!==K(a.i,a.j);k=from.get(k)){const [i,j]=k.split(',').map(Number);pts.unshift(iso(i,j))}
+ pts.pop();pts.push({x:x1,y:y1});
+ const out=[];let cx=x0,cy=y0;for(let q=0;q<pts.length;q++){const nx=pts[q+1];if(nx&&ligneLibre(cx,cy,nx.x,nx.y))continue;out.push(pts[q]);cx=pts[q].x;cy=pts[q].y}return out}
+function ligneLibre(x0,y0,x1,y1){const n=Math.ceil(Math.hypot(x1-x0,y1-y0)/8);for(let s=1;s<=n;s++)if(!walkXY(x0+(x1-x0)*s/n,y0+(y1-y0)*s/n))return false;return true}
+
+/* ================= Images ================= */
+const IMG={},img=s=>{if(!IMG[s]){const i=new Image();i.src=s;IMG[s]=i}return IMG[s]},ok=i=>i&&i.complete&&i.naturalWidth;
+img('img/bg.webp');for(const p of ['idle','w1','w2','atk'])img('img/u/borr_'+p+'.webp');
+for(const s of Object.keys(MS))for(const p of ['w1','w2','atk','dead']){img('img/m/'+s+'_'+p+'.webp');if(p!=='dead')img('img/m/'+s+'_'+p+'_rim.webp')}
+const FXN=['slash','death','lvlup','fire','flame','boom','heal','holy','rock'];FXN.forEach(k=>img('img/fx/'+k+'.webp'));
+
+/* ================= État ================= */
+let S,hero,cam={x:0,y:0,z:1.8},paused=false,mjSpawn=null,showAggro=false,xpMul=1,shake=0;
+function nouveau(){
+ hero={nom:'Hrolf',x:0,y:0,r:11,face:1,vie:4,vieMax:4,endu:4,degats:1,pvClasse:16,def:2,
+  arme:{nom:'Hache lourde',des:'WR',mains:2,cadence:2.5},armure:{nom:'Armure de mailles',def:2},
+  xp:100,depense:0,talents:new Set(['destructeur','rage']),etats:{},enrag:0,
+  path:[],cible:null,prochain:0,walk:0,atk:0,auSol:0,coma:0,cd:{frappe:0},criUtilise:0,potions:3,reposCourts:0,reposOk:1};
+ hero.pv=pvMax();const s=snap(520,600);hero.x=s.x;hero.y=s.y;
+ S={t:0,mons:[],corps:[],fx:[],txt:[],proj:[],combat:0,horsCombat:0,log:[]};
+ const camps=[['rodeur',760,430,2],['rodeur',1060,560,2],['charo',330,250,2],['charo',1000,330,2],['mystique',720,250,1],['mystique',1290,720,1],['colosse',1395,205,1]];
+ for(const [t,x,y,n] of camps)campe(t,x,y,n);
+ cam.x=hero.x;cam.y=hero.y;document.getElementById('journal').innerHTML='';
+ jlog('carte','<span class="hro">'+hero.nom+'</span> entre dans la clairière.');majTout()}
+let uid=0;
+function campe(t,x,y,n){const camp=++uid;for(let k=0;k<n;k++){const a=k/n*6.28,p=snap(x+Math.cos(a)*(n>1?22:0),y+Math.sin(a)*(n>1?11:0));if(!p)continue;const d=ADV[t],sz=MS[d.spr];
+ S.mons.push({id:++uid,t,d,camp,x:p.x,y:p.y,hx:p.x,hy:p.y,pv:d.pv,face:Math.random()<.5?1:-1,w:sz[0],h:sz[1],r:d.boss?26:10,aggro:0,prochain:0,walk:0,atk:0,etats:{},n:0,retour:0})}}
+const pvMax=()=>hero.vie*hero.endu+hero.pvClasse;
+const has=k=>hero.talents.has(k);
+const vivants=()=>S.mons.filter(m=>m.pv>0);
+const dist=(a,b)=>Math.hypot(a.x-b.x,(a.y-b.y)*2); // distance au sol : l'iso écrase la profondeur de moitié
+const contact=(a,b)=>dist(a,b)<=a.r+b.r+14;
+const gainRage=n=>{if(n<=0)return;hero.etats.Rage=(hero.etats.Rage||0)+n*(has('rage_infinie')?2:1)};
+const bonusDeg=()=>hero.degats+(hero.etats.Rage||0)+hero.enrag;
+
+/* ================= Journal (tons de la charte) ================= */
+const TON={attaque:'#3f7bc0',talent:'#8a63c9',degats:'#b8483a',soin:'#2f8a63',etat:'#a2691f',carte:'#8a6d3b',butin:'#a8832c'};
+function jlog(ton,html){const j=document.getElementById('journal'),e=document.createElement('div');e.className='l';e.style.setProperty('--t',TON[ton]);e.innerHTML=html;j.prepend(e);while(j.children.length>60)j.lastChild.remove()}
+const desHtml=f=>f.map(x=>'<span class="de'+(DES[x.c][2]?' dark':'')+(x.out?' x':x.bloque?' b':'')+(x.plus?' p':'')+'" style="--d:'+DES[x.c][1]+'">'+x.v+'</span>').join('');
+const qui=e=>e===hero?'<span class="hro">'+hero.nom+'</span>':'<span class="adv">'+e.d.nom+'</span>';
+
+/* ================= Combat ================= */
+function frapper(src,cibles,l,o){o=o||{};let tue=0;
+ for(const c of cibles){const def=c===hero?(hero.auSol>0?0:hero.def):c.d.def,sai=c.etats.Saignée||0;
+  const r=resoudre(l,def,o.bonus,sai);const tot=r.total;
+  jlog(src===hero?'attaque':'degats',qui(src)+(o.nom?' · '+o.nom:'')+' → '+qui(c)+' : '+desHtml(r.faces)+' '+(l.echec?'<b>Échec</b>':l.crit?'<b style="color:#ffd34a">Critique</b> ':'')+(l.echec?'':'<b>'+tot+'</b> dégâts'));
+  if(l.echec){float(c.x,c.y-hauteur(c),'Échec','#bbb');continue}
+  blesse(c,tot,l.crit,src);
+  if(tot>0&&c.pv>0){if(o.saignee)etat(c,'Saignée',1);if(o.feu)etat(c,'Feu',1);if(r.poison)etat(c,'Poison',r.poison);if(o.auSol&&c===hero){hero.auSol=1.5;hero.path=[];float(c.x,c.y-50,'Au sol',ETATS['Au sol'])}}
+  if(c!==hero&&c.pv<=0)tue++}
+ return tue}
+function hauteur(e){return e===hero?48:e.h+6}
+function etat(c,n,v){c.etats[n]=(c.etats[n]||0)+v;if(c===hero)majTout()}
+function blesse(c,tot,crit,src){if(tot<=0){float(c.x,c.y-hauteur(c),'0','#ddd');return}
+ c.pv-=tot;float(c.x,c.y-hauteur(c),String(tot),crit?'#ffd34a':c===hero?'#ff6a5a':'#fff',crit);fx('slash',c.x,c.y-hauteur(c)*.5,{sz:c===hero?30:Math.max(26,c.w*.7),flip:Math.random()<.5});
+ if(crit){spark(c.x,c.y-hauteur(c)*.5,'#ffd34a',12);shake=Math.max(shake,.18)}
+ if(c===hero){if(S.combat&&!hero.coma)gainRage(1);if(hero.pv<=0)coma();majTout()}
+ else if(c.pv<=0)meurt(c,src);else{c.aggro=1;aggroCamp(c)}}
+function meurt(m,src){m.pv=0;S.corps.push({spr:m.d.spr,x:m.x,y:m.y,face:m.face,life:0});fx('death',m.x,m.y-m.h*.5,{sz:Math.max(40,m.w*1.2)});
+ const xp=m.d.xp*xpMul,av=marques();hero.xp+=xp;float(m.x,m.y-m.h-14,'+'+xp+' XP','#e2ae72');
+ if(src===hero&&has('rage_tue'))gainRage(1);
+ if(marques()>av){fx('lvlup',hero.x,hero.y-24,{sz:90,dur:.8});float(hero.x,hero.y-70,'+1 Marque','#ffd34a',1);flashRond('bTal')}
+ jlog('butin',qui(m)+' tombe : <b>'+xp+'</b> XP.');S.mons=S.mons.filter(x=>x!==m);majTout()}
+function coma(){hero.pv=0;hero.coma=1;hero.vie--;hero.path=[];hero.cible=null;
+ jlog('degats','<span class="hro">'+hero.nom+'</span> tombe dans le <b>Coma</b> et perd <b>1 VIE</b>.');
+ for(const m of S.mons){m.aggro=0;m.retour=1}
+ if(hero.vie<=0)fin('Mort','La VIE de '+hero.nom+' est tombée à 0.')}
+function aggroCamp(m){for(const o of S.mons)if(o.camp===m.camp&&!o.aggro&&o.pv>0){o.aggro=1;o.retour=0;o.prochain=Math.max(o.prochain,S.t+1+Math.random()*2)}}
+function debutCombat(){S.combat=1;hero.criUtilise=0;if(has('rage_depart')){const n=d6();gainRage(n);float(hero.x,hero.y-60,'+'+n*(has('rage_infinie')?2:1)+' Rage',ETATS.Rage)}majTout()}
+function finCombat(){S.combat=0;for(const k of Object.keys(hero.etats))delete hero.etats[k];hero.enrag=0;hero.auSol=0;hero.reposOk=1;
+ if(hero.coma&&hero.vie>0){hero.coma=0;hero.pv=Math.min(pvMax(),d6()+hero.endu);jlog('soin','<span class="hro">'+hero.nom+'</span> revient à lui : <b>'+hero.pv+'</b> PV.');hero.reposOk=0}
+ majTout()}
+// Attaque de l'arme : Double attaque / Tourbillon visent plusieurs adversaires au contact, d'un seul jet.
+function attaqueHeros(cible,o){o=o||{};const auc=vivants().filter(m=>contact(hero,m)).sort((a,b)=>(a===cible?-1:b===cible?1:dist(hero,a)-dist(hero,b)));if(!auc.length)return false;
+ const n=has('double_tourbillon')?99:has('double')?2:1,cibles=auc.slice(0,n);
+ const l=lancer(hero.arme.des+(o.mortel?'M':''),{doubles:has('destructeur')});
+ hero.face=cibles[0].x>=hero.x?1:-1;hero.atk=.35;
+ frapper(hero,cibles,l,{bonus:bonusDeg(),nom:o.nom,saignee:o.saignee});
+ if(l.crit){if(has('rage_crit'))gainRage(1);if(has('enrag'))hero.enrag+=has('enrag_plus')?2:1}
+ if(hero.etats.Poison&&!hero.coma){blesse(hero,hero.etats.Poison,0);jlog('etat','<span class="hro">'+hero.nom+'</span> subit son <b>Poison</b> : <b>'+hero.etats.Poison+'</b>.')}
+ hero.prochain=S.t+(hero.arme.cadence||(hero.arme.mains>1?CADENCE_2M:CADENCE));majTout();return true}
+function frappeFurieuse(){if(!has('frappe')||hero.coma||hero.auSol>0||S.t<hero.cd.frappe)return;
+ const c=hero.cible&&hero.cible.pv>0&&contact(hero,hero.cible)?hero.cible:vivants().filter(m=>contact(hero,m)).sort((a,b)=>dist(hero,a)-dist(hero,b))[0];if(!c)return float(hero.x,hero.y-60,'Personne au contact','#bbb');
+ attaqueHeros(c,{nom:'Frappe Furieuse',mortel:has('frappe_mortelle'),saignee:has('frappe_saignee')});
+ gainRage(1+(has('frappe_melee')?vivants().filter(m=>contact(hero,m)).length:0));hero.cd.frappe=S.t+TOUR;flashRond('r_frappe');majTout()}
+function criDeGuerre(){if(!has('cri')||hero.coma||hero.criUtilise)return;const auc=vivants().filter(m=>contact(hero,m)).sort((a,b)=>dist(hero,a)-dist(hero,b));if(!auc.length)return float(hero.x,hero.y-60,'Personne au contact','#bbb');
+ hero.criUtilise=1;fx('boom',hero.x,hero.y-20,{sz:110});shake=.25;const opp=bonusDeg();
+ for(const m of has('cri_tous')?auc:auc.slice(0,1)){const a=Math.atan2((m.y-hero.y)*2,m.x-hero.x);for(let s=0;s<12;s++){const nx=m.x+Math.cos(a)*4,ny=m.y+Math.sin(a)*2;if(walkXY(nx,ny)){m.x=nx;m.y=ny}}
+  jlog('talent','<span class="hro">'+hero.nom+'</span> · Cri de Guerre : '+qui(m)+' recule, <b>'+opp+'</b> dégâts d’Opportunité.');blesse(m,opp,0,hero)}
+ flashRond('r_cri');majTout()}
+function potion(){if(hero.coma||hero.potions<=0||hero.pv>=pvMax())return;hero.potions--;const a=d6(),b=d6(),n=a+b;hero.pv=Math.min(pvMax(),hero.pv+n);
+ fx('heal',hero.x,hero.y-24,{sz:70});float(hero.x,hero.y-60,'+'+n,'#65d675',1);jlog('soin','<span class="hro">'+hero.nom+'</span> · Potion de soin : '+desHtml([{c:'S',v:a},{c:'S',v:b}])+' <b>+'+n+'</b> PV.');majTout()}
+function reposCourt(){if(hero.coma||S.combat||!hero.reposOk||hero.reposCourts>=hero.vie)return float(hero.x,hero.y-60,S.combat?'En combat':'Repos impossible','#bbb');
+ const a=d6(),n=a+hero.endu;hero.pv=Math.min(pvMax(),hero.pv+n);hero.reposCourts++;hero.reposOk=0;for(const k of Object.keys(hero.etats))delete hero.etats[k];
+ fx('heal',hero.x,hero.y-24,{sz:80});float(hero.x,hero.y-60,'+'+n,'#65d675',1);jlog('soin','<span class="hro">'+hero.nom+'</span> · Repos court : '+desHtml([{c:'W',v:a}])+' + Endurance <b>'+hero.endu+'</b> = <b>+'+n+'</b> PV.');majTout()}
+function reposLong(){if(S.combat)return;hero.vie=hero.vieMax;hero.coma=0;hero.pv=pvMax();hero.reposCourts=0;hero.reposOk=1;hero.potions=Math.max(hero.potions,3);fx('holy',hero.x,hero.y-24,{sz:90});jlog('soin','Repos long : <span class="hro">'+hero.nom+'</span> retrouve sa VIE et ses PV.');majTout()}
+
+/* ================= Boucle ================= */
+function step(dt){S.t+=dt;
+ // Héros
+ if(hero.auSol>0)hero.auSol-=dt;
+ if(!hero.coma&&hero.auSol<=0){
+  if(hero.cible&&hero.cible.pv<=0)hero.cible=null;
+  if(hero.cible){if(contact(hero,hero.cible))hero.path=[];else if(!hero.path.length||S.t>(hero.repath||0)){hero.path=chemin(hero.x,hero.y,hero.cible.x,hero.cible.y);hero.repath=S.t+.3}}
+  if(hero.path.length){const p=hero.path[0],dx=p.x-hero.x,dy=p.y-hero.y,d=Math.hypot(dx,dy),sp=78*dt;
+   if(Math.abs(dx)>1)hero.face=dx>0?1:-1;if(d<=sp){hero.x=p.x;hero.y=p.y;hero.path.shift()}else{hero.x+=dx/d*sp;hero.y+=dy/d*sp}hero.walk+=dt*10}
+  else{hero.walk=0;if(S.t>=hero.prochain){const c=hero.cible&&contact(hero,hero.cible)?hero.cible:null;if(c||vivants().some(m=>contact(hero,m)&&m.aggro))attaqueHeros(c)}}}
+ if(hero.atk>0)hero.atk-=dt;
+ // Adversaires
+ let enCombat=0;
+ for(const m of vivants()){const d=m.d;if(m.atk>0)m.atk-=dt;
+  if(!m.aggro&&!m.retour&&!hero.coma&&dist(m,hero)<(d.boss?190:150)){m.aggro=1;m.prochain=S.t+1+Math.random()*2;aggroCamp(m);jlog('carte',qui(m)+' vous a vu.')}
+  if(m.aggro&&Math.hypot(m.x-m.hx,m.y-m.hy)>520){m.aggro=0;m.retour=1}
+  let bx=null,by=null;
+  if(m.retour){bx=m.hx;by=m.hy;if(Math.hypot(m.x-bx,m.y-by)<6){m.retour=0;m.pv=d.pv;m.etats={}}}
+  else if(m.aggro){enCombat=1;const portee=d.distance?240:0;
+   if(d.distance?dist(m,hero)<=portee&&ligneLibre(m.x,m.y,hero.x,hero.y):contact(m,hero)){m.face=hero.x>=m.x?1:-1;
+    if(S.t>=m.prochain){attaqueAdv(m);m.prochain=S.t+TOUR}
+    if(d.distance&&dist(m,hero)<110){bx=m.x+(m.x-hero.x);by=m.y+(m.y-hero.y)}}
+   else{bx=hero.x;by=hero.y}}
+  if(bx!==null){const dx=bx-m.x,dy=by-m.y,dd=Math.hypot(dx,dy);if(dd>2){const sp=(d.rapide?80:52)*(m.retour?1.6:1)*dt,nx=m.x+dx/dd*sp,ny=m.y+dy/dd*sp;
+   if(walkXY(nx,ny)){m.x=nx;m.y=ny}else if(walkXY(nx,m.y))m.x=nx;else if(walkXY(m.x,ny))m.y=ny;m.walk+=dt*10;if(Math.abs(dx)>1)m.face=dx>0?1:-1}}else m.walk=0;
+  // Feu : à chaque tour, n dés noirs sans DEF.
+  if(m.etats.Feu&&S.t>=(m.feuT||(m.feuT=S.t+TOUR))){m.feuT=S.t+TOUR;let n=0;for(let k=0;k<m.etats.Feu;k++)n+=d6();fx('flame',m.x,m.y-m.h*.5,{sz:40});blesse(m,n,0,hero)}}
+ // Séparation des socles
+ const L=vivants();for(let a=0;a<L.length;a++){const A=L[a];for(let b=a+1;b<L.length;b++){const B=L[b],dx=B.x-A.x,dy=(B.y-A.y)*2,d=Math.hypot(dx,dy)||1,min=A.r+B.r;if(d<min){const p=(min-d)/2/d;if(walkXY(A.x-dx*p,A.y-dy*p/2)){A.x-=dx*p;A.y-=dy*p/2}if(walkXY(B.x+dx*p,B.y+dy*p/2)){B.x+=dx*p;B.y+=dy*p/2}}}
+  if(!hero.coma){const dx=A.x-hero.x,dy=(A.y-hero.y)*2,d=Math.hypot(dx,dy)||1,min=A.r+hero.r;if(d<min){const p=(min-d)/d;if(walkXY(A.x+dx*p,A.y+dy*p/2)){A.x+=dx*p;A.y+=dy*p/2}}}}
+ if(hero.etats.Feu&&!hero.coma&&S.t>=(hero.feuT||(hero.feuT=S.t+TOUR))){hero.feuT=S.t+TOUR;let n=0;for(let k=0;k<hero.etats.Feu;k++)n+=d6();fx('flame',hero.x,hero.y-24,{sz:40});jlog('etat','<span class="hro">'+hero.nom+'</span> brûle : <b>'+n+'</b>.');blesse(hero,n,0)}
+ if(enCombat&&!S.combat)debutCombat();
+ if(!enCombat&&S.combat){S.horsCombat+=dt;if(S.horsCombat>1.5){S.horsCombat=0;finCombat()}}else S.horsCombat=0;
+ // Projectiles
+ for(const p of S.proj){p.t+=dt;const k=Math.min(1,p.t/p.dur);p.x=p.x0+(hero.x-p.x0)*k;p.y=p.y0+(hero.y-24-p.y0)*k-Math.sin(k*Math.PI)*30;if(k>=1){p.done=1;if(!hero.coma)p.hit()}}
+ S.proj=S.proj.filter(p=>!p.done);
+ for(const f of S.fx)f.t+=dt;S.fx=S.fx.filter(f=>f.t<f.dur);
+ for(const t of S.txt)t.t+=dt;S.txt=S.txt.filter(t=>t.t<1.1);
+ for(const c of S.corps)c.life+=dt;S.corps=S.corps.filter(c=>c.life<60);
+ if(shake>0)shake-=dt;
+ if(!vivants().length&&!S.gagne){S.gagne=1;fin('Clairière nettoyée','Tous les adversaires sont tombés. Le MJ peut en poser d’autres.',1)}}
+function attaqueAdv(m){if(hero.coma)return;const d=m.d;m.n++;const a=d.boss&&m.n%3===0?d.att[1]:d.att[0];m.atk=.4;
+ const l=lancer(a.des);const go=()=>frapper(m,[hero],l,{bonus:d.degats,nom:a.nom,feu:a.feu,auSol:a.auSol});
+ if(d.distance){fx('fire',m.x,m.y-m.h*.6,{sz:30,dur:.3});S.proj.push({x0:m.x,y0:m.y-m.h*.6,x:m.x,y:m.y,t:0,dur:Math.max(.25,dist(m,hero)/400),hit:go})}else{go();if(a.tous)fx('rock',m.x,m.y-10,{sz:140})}}
+
+/* ================= Rendu ================= */
+const cv=document.getElementById('c'),g=cv.getContext('2d');let dpr=1,VW=0,VH=0;
+function resize(){dpr=Math.min(2,devicePixelRatio||1);VW=innerWidth;VH=innerHeight;cv.width=VW*dpr;cv.height=VH*dpr}addEventListener('resize',resize);resize();
+function fx(k,x,y,o){o=o||{};S.fx.push({k,x,y,t:0,dur:o.dur||.45,sz:o.sz||40,flip:o.flip})}
+function float(x,y,s,c,big){S.txt.push({x,y,s,c,t:0,big})}
+function spark(x,y,c,n){for(let k=0;k<n;k++){const a=Math.random()*6.28,s=60+Math.random()*90;S.fx.push({spark:1,x,y,vx:Math.cos(a)*s,vy:Math.sin(a)*s*.6-20,c,t:0,dur:.3+Math.random()*.2})}}
+function ombre(x,y,rx,ry,a){g.save();g.translate(x,y);g.scale(1,ry/rx);const gr=g.createRadialGradient(0,0,0,0,0,rx);gr.addColorStop(0,`rgba(0,0,0,${a})`);gr.addColorStop(1,'rgba(0,0,0,0)');g.fillStyle=gr;g.beginPath();g.arc(0,0,rx,0,7);g.fill();g.restore()}
+function anneau(x,y,rx,c,w){g.strokeStyle=c;g.lineWidth=w||2;g.beginPath();g.ellipse(x,y,rx,rx*.45,0,0,7);g.stroke()}
+function drawHero(t){const u=hero;ombre(u.x,u.y+1,13,5,.45);anneau(u.x,u.y,15,`rgba(255,210,122,${.55+Math.sin(t*3)*.25})`);
+ if(u.etats.Rage)anneau(u.x,u.y,19,'rgba(212,85,42,.75)',1.5+Math.min(4,u.etats.Rage*.3));
+ const pose=u.coma?'idle':u.atk>0?'atk':u.walk>0?(Math.floor(u.walk/2.6)%2?'w2':'w1'):'idle',im=IMG['img/u/borr_'+pose+'.webp'],id=IMG['img/u/borr_idle.webp'];if(!ok(im)||!ok(id))return;
+ const w=im.naturalWidth/2,h=im.naturalHeight/2,iw=id.naturalWidth/2;g.save();g.translate(u.x,u.y);
+ if(u.coma){g.rotate(-1.45*u.face);g.filter='grayscale(1) brightness(.7)';g.translate(0,-6)}else if(u.auSol>0){g.rotate(-.5*u.face)}
+ g.scale(u.face,1);g.drawImage(im,pose==='atk'?-iw/2:-w/2,-h+2.5,w,h);g.restore()}
+function drawMon(m,t,hov){const sp=m.d.spr,pose=m.atk>0?'atk':m.walk>0&&Math.floor(m.walk/2.4)%2?'w2':'w1',rim=IMG['img/m/'+sp+'_'+pose+'_rim.webp'],im0=IMG['img/m/'+sp+'_'+pose+'.webp'],useR=ok(rim),im=useR?rim:im0;
+ ombre(m.x,m.y+1,m.w*.34+3,m.w*.11+2.5,.45);if(hov||m===hero.cible)anneau(m.x,m.y,m.w*.42+6,'#e2565f',2);else if(m.d.boss)anneau(m.x,m.y,m.w*.42+6,'rgba(226,86,95,.45)',2);
+ if(!ok(im))return;const pd=useR?2:0,w=im.naturalWidth/2-pd*2,h=im.naturalHeight/2-pd*2,iw=MS[sp][0],bob=pose==='atk'?0:Math.abs(Math.sin(m.walk*1.3))*m.h*.03;
+ g.save();g.translate(m.x,m.y);g.scale(m.face,1);if(m.etats.Feu)g.filter='sepia(.8) saturate(2.6) brightness(1.1)';else if(hov)g.filter='brightness(1.25)';
+ g.drawImage(im,(pose==='atk'?-iw/2:-w/2)-pd,-h+2-bob-pd,w+pd*2,h+pd*2);g.restore();
+ if(m.pv<m.d.pv||hov||m.aggro){const bw=Math.max(26,m.w*.6),y=m.y-m.h-8;g.fillStyle='#000a';g.fillRect(m.x-bw/2-1,y-1,bw+2,5);g.fillStyle='#c0392b';g.fillRect(m.x-bw/2,y,bw*Math.max(0,m.pv/m.d.pv),3);
+  let ex=m.x-bw/2;for(const [e,n] of Object.entries(m.etats)){if(!n)continue;const ic=ETAT_IC[e]?img(ETAT_IC[e]):null;if(ok(ic))g.drawImage(ic,ex,y-12,10,10);ex+=11}}}
+function draw(t){g.setTransform(1,0,0,1,0,0);g.fillStyle='#000';g.fillRect(0,0,cv.width,cv.height);
+ const z=cam.z*dpr,sx=shake>0?(Math.random()-.5)*6:0,sy=shake>0?(Math.random()-.5)*6:0;
+ cam.x=Math.max(VW/2/cam.z,Math.min(WW-VW/2/cam.z,cam.x));cam.y=Math.max(VH/2/cam.z,Math.min(WH-VH/2/cam.z,cam.y));
+ if(VW/cam.z>WW)cam.x=WW/2;if(VH/cam.z>WH)cam.y=WH/2;
+ g.setTransform(z,0,0,z,(VW/2-cam.x*cam.z+sx)*dpr,(VH/2-cam.y*cam.z+sy)*dpr);
+ const bg=IMG['img/bg.webp'];if(ok(bg))g.drawImage(bg,0,0,WW,WH);
+ if(showAggro){g.globalAlpha=.25;g.fillStyle='#e2ae72';for(const k of WALK){const [i,j]=k.split(',').map(Number),p=iso(i,j);g.beginPath();g.moveTo(p.x,p.y-TH/2);g.lineTo(p.x+TW/2,p.y);g.lineTo(p.x,p.y+TH/2);g.lineTo(p.x-TW/2,p.y);g.closePath();g.stroke()}g.globalAlpha=1;
+  for(const m of vivants())anneau(m.x,m.y,m.d.boss?190:150,m.aggro?'#e2565f':'#ffffff55',1)}
+ for(const c of S.corps){const im=IMG['img/m/'+c.spr+'_dead.webp'];if(!ok(im))continue;const w=im.naturalWidth/2,h=im.naturalHeight/2;g.save();g.globalAlpha=Math.max(0,Math.min(.9,(60-c.life)/5));g.translate(c.x,c.y);g.scale(c.face,1);g.drawImage(im,-w/2,-h+3,w,h);g.restore()}
+ if(hero.path.length&&!hero.cible){const p=hero.path[hero.path.length-1];anneau(p.x,p.y,8+Math.sin(t*6)*2,'#e2ae72',1.5)}
+ const hov=survol;const L=[...vivants(),hero].sort((a,b)=>a.y-b.y);for(const e of L)e===hero?drawHero(t):drawMon(e,t,e===hov);
+ for(const p of S.proj)fxFrame('fire',Math.floor(p.t*20)%6,p.x,p.y,34);
+ for(const f of S.fx){if(f.spark){g.fillStyle=f.c;g.globalAlpha=1-f.t/f.dur;g.fillRect(f.x+f.vx*f.t,f.y+f.vy*f.t+60*f.t*f.t,2,2);g.globalAlpha=1;continue}fxFrame(f.k,Math.min(5,Math.floor(f.t/f.dur*6)),f.x,f.y,f.sz,f.flip)}
+ for(const s of S.txt){const k=s.t/1.1;g.globalAlpha=1-k*k;g.font=`900 ${s.big?17:13}px system-ui`;g.textAlign='center';g.lineWidth=3;g.strokeStyle='#000';const y=s.y-k*26;g.strokeText(s.s,s.x,y);g.fillStyle=s.c;g.fillText(s.s,s.x,y);g.globalAlpha=1}}
+function fxFrame(k,f,x,y,sz,flip){const im=IMG['img/fx/'+k+'.webp'];if(!ok(im))return;g.save();g.translate(x,y);if(flip)g.scale(-1,1);g.drawImage(im,f*128,0,128,128,-sz/2,-sz/2,sz,sz);g.restore()}
+
+/* ================= Interface ================= */
+const $=id=>document.getElementById(id);
+function marques(){return Math.floor(hero.xp/100)}
+const dispo=()=>marques()-hero.depense;
+function rondHtml(k,o){o=o||{};const T=TAL[k],ty=tType(k),c='var(--'+ty+')';
+ return `<div class="rond ${o.cls||''}" id="${o.id||''}" data-tal="${k}" style="--t:${c}"><div class="o">${T.ic?`<img src="img/talents/${T.ic}.png" alt="">`:`<b>${GLYPH[ty]}</b>`}${o.cd?'<div class="cd"></div>':''}</div>${o.h?`<span class="h">${o.h}</span>`:''}${o.q!==undefined?`<span class="q">${o.q}</span>`:''}<div class="n">${T.nom}</div></div>`}
+function majRonds(){let h=`<div class="rond" id="r_auto" data-k="auto" style="--t:var(--act)"><div class="o"><img src="img/i/dR.webp" alt=""><div class="cd"></div></div><div class="n">${hero.arme.nom}</div></div>`;
+ if(has('frappe'))h+=rondHtml('frappe',{id:'r_frappe',h:'1',cd:1});if(has('cri'))h+=rondHtml('cri',{id:'r_cri',h:'2'});
+ h+=`<div class="rond" id="r_potion" data-k="potion" style="--t:var(--ame)"><div class="o"><img src="img/i/potion.png" alt=""></div><span class="h">Q</span><span class="q">${hero.potions}</span><div class="n">Potion</div></div>`;
+ h+=`<div class="rond" id="r_repos" data-k="repos" style="--t:var(--green)"><div class="o"><img src="img/i/heal.webp" alt=""></div><span class="h">R</span><span class="q">${Math.max(0,hero.vie-hero.reposCourts)}</span><div class="n">Repos court</div></div>`;
+ $('ronds').innerHTML=h}
+function flashRond(id){const e=$(id);if(!e)return;e.classList.remove('flash');void e.offsetWidth;e.classList.add('flash')}
+let sig='';
+function majTout(){const s=[...hero.talents].join()+hero.potions+'|'+hero.reposCourts+hero.vie;if(s!==sig){sig=s;majRonds()}
+ const pm=pvMax();$('pvbar').firstElementChild.style.width=Math.max(0,hero.pv/pm*100)+'%';$('pvbar').lastElementChild.textContent=Math.max(0,hero.pv)+' / '+pm+' PV';
+ let v='';for(let k=0;k<hero.vieMax;k++)v+=`<img class="vie${k<hero.vie?' on':''}" src="img/etats/vie.png" alt="VIE">`;
+ $('fstats').innerHTML=v+`<span class="pill" title="DEF">DEF <b>${hero.auSol>0?0:hero.def}</b></span><span class="pill" title="Dégâts"><img src="img/etats/degats.webp" alt="">+${bonusDeg()}</span><span class="pill" title="Endurance">END <b>${hero.endu}</b></span>`;
+ $('fetats').innerHTML=Object.entries(hero.etats).filter(([,n])=>n).map(([e,n])=>`<span class="pill etat" style="--t:${ETATS[e]}">${ETAT_IC[e]?`<img src="${ETAT_IC[e]}" alt="">`:''}${e} ${n}</span>`).join('')+(hero.enrag?`<span class="pill etat" style="--t:${ETATS.Rage}">Enragement +${hero.enrag}</span>`:'')+(hero.coma?`<span class="pill etat" style="--t:${ETATS.Coma}">Coma</span>`:'');
+ const x=hero.xp%100;$('xp').firstElementChild.style.width=x+'%';$('xpt').textContent='XP '+hero.xp+' · Marques '+marques()+' (dont '+dispo()+' à dépenser) · prochaine à '+(marques()+1)*100;
+ $('bTal').classList.toggle('pulse',dispo()>0);$('bTal').textContent='Talents (T)'+(dispo()>0?' · '+dispo():'');
+ $('r_repos')&&$('r_repos').classList.toggle('off',S.combat||!hero.reposOk||hero.reposCourts>=hero.vie||hero.coma);
+ $('r_potion')&&$('r_potion').classList.toggle('off',!hero.potions||hero.coma);
+ $('r_cri')&&$('r_cri').classList.toggle('off',!!hero.criUtilise||hero.coma)}
+function majCd(){const a=$('r_auto');if(a){const r=Math.max(0,hero.prochain-S.t)/(hero.arme.cadence||CADENCE_2M);a.querySelector('.cd').style.setProperty('--p',r*100+'%')}
+ const f=$('r_frappe');if(f){const r=Math.max(0,hero.cd.frappe-S.t)/TOUR;f.querySelector('.cd').style.setProperty('--p',r*100+'%');f.classList.toggle('off',r>0||hero.coma)}
+ const b=vivants().find(m=>m.d.boss&&m.aggro);$('boss').style.display=b?'block':'none';if(b){$('bossn').textContent=b.d.nom;$('boss').querySelector('i').style.width=b.pv/b.d.pv*100+'%';$('boss').querySelector('span').textContent=b.pv+' / '+b.d.pv}}
+// Arbre de talents : 1 Marque chacun ; une amélioration exige son talent de base.
+function majArbre(){$('marques').textContent='Marques à dépenser : '+dispo()+' · dépensées : '+hero.depense;
+ const bases=Object.keys(TAL).filter(k=>!TAL[k].de);
+ $('arbre').innerHTML=bases.map(k=>{const st=k2=>has(k2)?'':((!TAL[k2].de||has(TAL[k2].de))&&dispo()>0?'ok':'lock');
+  return `<div class="branche">${rondHtml(k,{cls:st(k)})}<div class="ames">${Object.keys(TAL).filter(a=>TAL[a].de===k).map(a=>rondHtml(a,{cls:st(a)})).join('')}</div></div>`}).join('');
+ $('arbre').querySelectorAll('.rond').forEach(r=>{const k=r.dataset.tal;if(!has(k))r.style.opacity=r.classList.contains('lock')?'.45':'.8'})}
+$('arbre').addEventListener('click',e=>{const r=e.target.closest('.rond');if(!r)return;const k=r.dataset.tal;if(has(k)||dispo()<=0||(TAL[k].de&&!has(TAL[k].de)))return;
+ hero.talents.add(k);hero.depense++;jlog('talent','<span class="hro">'+hero.nom+'</span> apprend <b>'+(TAL[k].de?TAL[TAL[k].de].nom+' — ':'')+TAL[k].nom+'</b>.');majArbre();majTout()});
+function ouvre(id,on){$(id).classList.toggle('on',on);if(id==='dTal'&&on)majArbre();paused=on||$('bPause').classList.contains('on')}
+document.querySelectorAll('[data-close]').forEach(x=>x.onclick=()=>ouvre(x.closest('.dlg').id,false));
+document.querySelectorAll('.dlg').forEach(d=>d.addEventListener('pointerdown',e=>{if(e.target===d&&d.id!=='fin')ouvre(d.id,false)}));
+$('bTal').onclick=()=>ouvre('dTal',!$('dTal').classList.contains('on'));
+$('bPause').onclick=()=>{$('bPause').classList.toggle('on');paused=$('bPause').classList.contains('on')};
+$('bMJ').onclick=()=>{$('mj').classList.toggle('on');$('bMJ').classList.toggle('on')};
+$('mjSpawn').innerHTML=Object.keys(ADV).map(k=>`<button class="btn" data-adv="${k}">${ADV[k].nom.split(' ')[0]}</button>`).join('');
+$('mjSpawn').onclick=e=>{const b=e.target.closest('[data-adv]');if(!b)return;mjSpawn=mjSpawn===b.dataset.adv?null:b.dataset.adv;$('mjSpawn').querySelectorAll('.btn').forEach(x=>x.classList.toggle('on',x.dataset.adv===mjSpawn))};
+$('mjLong').onclick=reposLong;$('mjAggro').onclick=()=>{showAggro=!showAggro;$('mjAggro').classList.toggle('on',showAggro)};
+$('mjXp').innerHTML='<span class="sec" style="width:100%">Gain d’XP</span>'+[1,2,5].map(n=>`<button class="btn${n===1?' on':''}" data-x="${n}">×${n}</button>`).join('');
+$('mjXp').onclick=e=>{const b=e.target.closest('[data-x]');if(!b)return;xpMul=+b.dataset.x;$('mjXp').querySelectorAll('.btn').forEach(x=>x.classList.toggle('on',x===b))};
+$('ronds').addEventListener('click',e=>{const r=e.target.closest('.rond');if(!r)return;const k=r.dataset.tal||r.dataset.k;({frappe:frappeFurieuse,cri:criDeGuerre,potion,repos:reposCourt})[k]?.()});
+$('bRe').onclick=()=>{ouvre('fin',false);nouveau()};
+function fin(t,p,gagne){$('finT').textContent=t;$('finP').textContent=p;$('bRe').textContent=gagne?'Recommencer la démo':'Recommencer';ouvre('fin',true);if(gagne)$('fin').addEventListener('pointerdown',function f(e){if(e.target===$('fin')){ouvre('fin',false);$('fin').removeEventListener('pointerdown',f)}})}
+// Infobulles (bulle de talent / fiche d'adversaire)
+const tip=$('tip');
+function montreTip(html,x,y,c){tip.innerHTML=html;tip.style.setProperty('--t',c||'var(--ink)');tip.style.display='block';const w=tip.offsetWidth,h=tip.offsetHeight;tip.style.left=Math.min(innerWidth-w-8,x+14)+'px';tip.style.top=Math.max(8,y-h-10)+'px'}
+document.addEventListener('pointerover',e=>{const r=e.target.closest('.rond');if(!r){if(!survol)tip.style.display='none';return}const k=r.dataset.tal,b=e.target.getBoundingClientRect();
+ if(k){const T=TAL[k];montreTip(`<h4>${T.de?TAL[T.de].nom+' — ':''}${T.nom}</h4><p>${T.txt}</p>`,b.left,b.top,'var(--'+tType(k)+')')}
+ else if(r.dataset.k==='auto')montreTip(`<h4>${hero.arme.nom}</h4><p>${desHtml([...hero.arme.des].map(c=>({c,v:'·'})))} · deux mains · un coup toutes les <b>${hero.arme.cadence} s</b>, au contact, sur l’adversaire le plus proche.</p>`,b.left,b.top,'var(--act)')});
+// Souris : clic au sol = marcher ; clic sur un adversaire = marcher jusqu'à son contact et le frapper (carte dynamique).
+let survol=null,tenu=false,mx=0,my=0;
+const monde=(x,y)=>({x:cam.x+(x-VW/2)/cam.z,y:cam.y+(y-VH/2)/cam.z});
+function sous(x,y){const p=monde(x,y);let best=null;for(const m of vivants()){if(Math.abs(p.x-m.x)<m.w/2+4&&p.y<m.y+6&&p.y>m.y-m.h-4&&(!best||m.y>best.y))best=m}return best}
+function ordre(x,y){if(hero.coma||hero.auSol>0)return;const m=sous(x,y);if(m){hero.cible=m;hero.path=chemin(hero.x,hero.y,m.x,m.y);return}
+ hero.cible=null;const p=monde(x,y);hero.path=chemin(hero.x,hero.y,p.x,p.y)}
+cv.addEventListener('pointerdown',e=>{if(e.button!==0)return;mx=e.clientX;my=e.clientY;
+ if(mjSpawn){const p=monde(mx,my);if(walkXY(p.x,p.y)){campe(mjSpawn,p.x,p.y,ADV[mjSpawn].boss||ADV[mjSpawn].distance?1:3);S.gagne=0}return}
+ tenu=true;ordre(mx,my)});
+addEventListener('pointerup',()=>tenu=false);
+cv.addEventListener('pointermove',e=>{mx=e.clientX;my=e.clientY;survol=sous(mx,my);
+ if(survol){const d=survol.d;montreTip(`<h4>${d.nom}</h4><p>${d.famille} · ${d.type}</p><p>PV <b>${survol.pv}</b>/${d.pv} · DEF <b>${d.def}</b> · Dégâts <b>+${d.degats}</b> · XP <b>${d.xp}</b></p>${d.att.map(a=>`<p>${a.nom} : ${desHtml([...a.des].map(c=>({c,v:'·'})))}${a.feu?' · Feu':''}${a.auSol?' · Au sol':''}${a.tous?' · tous au contact':''}</p>`).join('')}`,mx,my,'#e2565f')}
+ else if(!e.target.closest('.rond'))tip.style.display='none'});
+cv.addEventListener('wheel',e=>{cam.z=Math.max(1,Math.min(3.2,cam.z*(e.deltaY<0?1.1:.9)));e.preventDefault()},{passive:false});
+addEventListener('keydown',e=>{if(e.repeat)return;const k=e.key.toLowerCase();
+ if(k==='1')frappeFurieuse();else if(k==='2')criDeGuerre();else if(k==='q')potion();else if(k==='r')reposCourt();
+ else if(k==='t')$('bTal').click();else if(k==='m')$('bMJ').click();else if(k===' '){$('bPause').click();e.preventDefault()}
+ else if(k==='escape'){ouvre('dTal',false);mjSpawn=null;$('mjSpawn').querySelectorAll('.btn').forEach(x=>x.classList.remove('on'))}});
+// Portrait : la tête du sprite du Destructeur.
+function portrait(){const im=IMG['img/u/borr_idle.webp'];if(!ok(im))return setTimeout(portrait,100);const p=$('portrait').getContext('2d');p.imageSmoothingEnabled=false;p.drawImage(im,im.naturalWidth*.22,0,im.naturalWidth*.56,im.naturalWidth*.56,0,0,128,128)}
+
+let last=performance.now(),acc=0;
+function loop(now){const dt=Math.min(.05,(now-last)/1000);last=now;
+ if(!paused){if(tenu&&!survol&&(acc+=dt)>.15){acc=0;ordre(mx,my)}step(dt)}
+ cam.x+=(hero.x-cam.x)*Math.min(1,dt*6);cam.y+=(hero.y-30-cam.y)*Math.min(1,dt*6);draw(now/1000);majCd();
+ if(!paused&&Math.floor(S.t*4)!==Math.floor((S.t-dt)*4))majTout();requestAnimationFrame(loop)}
+nouveau();portrait();requestAnimationFrame(loop);
+// Accroches de test (tools/smoke.js)
+window.__test={get S(){return S},get hero(){return hero},step,ordre:(x,y)=>{hero.cible=null;hero.path=chemin(hero.x,hero.y,x,y)},cible:m=>{hero.cible=m},frappeFurieuse,criDeGuerre,reposCourt,potion,lancer,resoudre,pause:v=>{paused=v}};
+window.addEventListener('error',e=>{(window.__errs=window.__errs||[]).push(e.message)});
+</script>
+</body>
+</html>

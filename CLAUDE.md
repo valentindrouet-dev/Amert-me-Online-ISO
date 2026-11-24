@@ -29,3 +29,23 @@ Take the first option that fully works:
 - A shortcut with a known limit gets a code comment in this form: `shortcut: <the limit>, <when to upgrade>`.
 
 Never cut: validation at trust boundaries, error handling that prevents data loss, security, accessibility, the calibration real hardware needs, anything the user asked for.
+
+# Amertüme ISO — passation
+
+Fusion d'**Amertüme Online** (système de règles) et des **Nuits de Lamuline / Defenders** (vue iso, sprites 16 bits, VFX), en action temps réel façon Diablo simplifié. Réponses en français.
+
+- Tout est dans `index.html` (HTML + CSS + un `<script>`), sans build ni dépendance. Ouvrir via un serveur HTTP, pas en `file://`.
+- Test : `node tools/smoke.js capture-0.png` (Playwright sert le dépôt lui-même ; échoue sur toute erreur JS ou `console.assert`, produit `-0`, `-mid`, `-1`). Accroches : `window.__test`.
+- Version : constante `VERSION` dans `index.html`, à augmenter à chaque push.
+
+## Ce qui vient d'où
+- **Règles** (combat.js / regles.js d'Online) : `lancer()` + `resoudre()` = dés d6 de couleur (Léger retiré, double 1 échec, double 6 critique + dé en chaîne, DEF, Lourd/Mortel/6 passent, Mystique apparié doublé comme dans le moteur, bonus de Dégâts + Saignée si un dé passe). PV = VIE × Endurance + PV de classe ; Coma à 0 PV (−1 VIE, retour à la fin du combat avec 1d6 + Endurance) ; repos court (1d6 + END, autant que la VIE) ; XP → 1 Marque / 100 XP → talents.
+- **Temps réel** : règle « Carte dynamique » d'Online (clic au sol = marcher, clic sur un adversaire = aller au contact, frappe auto à la cadence de l'arme). `TOUR = 6 s` = 1 PA : cadence des adversaires, recharge des Actions, Feu.
+- **Destructeur** (`TAL`) : maîtrises Destructeur et Rage d'office ; Frappe Furieuse (1), Cri de Guerre (2), Double attaque, Enragement et leurs améliorations, 1 Marque chacun.
+- **Adversaires** (`ADV`) : les 4 fiches du catalogue Online ; sprites Lamuline `rodeur`, `charo`, `ombre` (Mystique déchu), `colosse`.
+- **Carte** : `img/bg.webp` de Lamuline, cases marchables = masque `WALK` (clairière + chemins), A* `chemin()`.
+- **UI** : charte d'Online thème sombre (variables `--…`, Killam, ronds de talent, journal à tons), cadre et barre façon Defenders.
+
+## Manque / provisoire
+- Sprites : pas de pose « à terre » du héros (sprite couché en filtre gris), pas de sprite d'attaque à distance du Mystique déchu (boule de feu = VFX `fire`).
+- Non portés : Esquive, Fuite du Colosse, Opportunité, Faille/Phase, sons, sauvegarde, multijoueur/MJ en ligne.
