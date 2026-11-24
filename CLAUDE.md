@@ -47,10 +47,14 @@ Fusion d'**Amertüme Online** (système de règles) et des **Nuits de Lamuline /
 - **Carte** : `img/bg.webp` de Lamuline, cases marchables = masque `WALK` (clairière + chemins), A* `chemin()`.
 - **UI** : charte d'Online thème sombre (variables `--…`, Killam, ronds de talent, journal à tons), cadre et barre façon Defenders.
 
+- **Hrolf** (`HANIM`, `drawHero`, `anime()`) : planche 6 × 7 de Valentin → `img/u/hrolf_{idle,walk,atk,furie,cri,sol,mort}.webp` ; il regarde à GAUCHE sur la planche (dessin en `scale(-face)`). Au sol = ligne « sol » ; Coma = image 3 de « sol » ; mort = ligne « mort » puis écran de fin.
+- **Interface** : cadre du héros (portrait cerclé de ses PV, caracs, VIE, états), barre d'action avec orbes PV / Rage et cases carrées (`slot()`). Journal masqué (demande de Valentin) mais `jlog()` tourne toujours.
+- **Caméra** : zoom minimal `zMin()` = la carte couvre tout l'écran, jamais de noir autour.
+- **Patrouilles** : au calme, les adversaires font quelques pas autour de leur camp (`m.pat`).
 - **Éditeur de carte** (MJ → « Éditer la carte ») : fond importé (PNG/JPEG/WebP, sa taille devient celle de la carte), sol / mur au pinceau sur la grille iso, départ, camps (palette du MJ), gomme ; clic droit + glisser pour déplacer la vue. `CARTE` = {nom, fond, w, h, walk, depart, camps} ; sauvée en localStorage (`amertume-iso-carte`) ou exportée/importée en JSON, toujours passée par `valideCarte()`.
 - **Réglages** (panneau MJ, localStorage `amertume-iso-reglages`) : cadence de la hache (défaut 1,5 s) et durée d'un tour `TOUR` (défaut 6 s).
 - Boutons d'action carrés (demande de Valentin, écart volontaire aux ronds de la charte).
 
 ## Manque / provisoire
-- Sprites : pas de pose « à terre » du héros (sprite couché en filtre gris), pas de sprite d'attaque à distance du Mystique déchu (boule de feu = VFX `fire`).
+- Sprites : pas de pose « mort » du Kobold, pas de sprite d'attaque à distance du Mystique déchu (boule de feu = VFX `fire`).
 - Non portés : Esquive, Fuite du Colosse, Opportunité, Faille/Phase, sons, sauvegarde, multijoueur/MJ en ligne.
