@@ -16,7 +16,7 @@ const ROOT=path.join(__dirname,'..'),TYPES={html:'text/html',webp:'image/webp',p
    if(libre&&Math.floor(h.xp/100)>h.depense){h.talents.add(libre);h.depense++}
    if(!S.combat&&!h.coma&&h.pv<h.vie*h.endu+16-6&&h.reposOk&&h.reposCourts<h.vie)T.reposCourt();
    if(h.coma&&!c.was)c.comas++;c.was=h.coma;if(h.pv<12)T.potion();if(k%120===0){T.frappeFurieuse();T.criDeGuerre()}T.step(0.05)}
-  return {restants:S.mons.length,vie:h.vie,pv:h.pv,xp:h.xp,t:Math.round(S.t),comas:c.comas}},n);
+  return {restants:S.mons.map(m=>m.t).join(),vie:h.vie,pv:h.pv,xp:h.xp,t:Math.round(S.t),comas:c.comas}},n);
  await joue(260);await p.evaluate(()=>__test.pause(false));await p.waitForTimeout(250);await p.screenshot({path:shot.replace(/0\.png$/,'mid.png')});
  console.log(JSON.stringify(await joue(8000)));
  await p.evaluate(()=>__test.pause(false));await p.waitForTimeout(500);await p.screenshot({path:shot.replace(/0\.png$/,'1.png')});

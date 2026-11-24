@@ -43,6 +43,7 @@ Fusion d'**Amertüme Online** (système de règles) et des **Nuits de Lamuline /
 - **Temps réel** : règle « Carte dynamique » d'Online (clic au sol = marcher, clic sur un adversaire = aller au contact, frappe auto à la cadence de l'arme). `TOUR = 6 s` = 1 PA : cadence des adversaires, recharge des Actions, Feu.
 - **Destructeur** (`TAL`) : maîtrises Destructeur et Rage d'office ; Frappe Furieuse (1), Cri de Guerre (2), Double attaque, Enragement et leurs améliorations, 1 Marque chacun.
 - **Adversaires** (`ADV`) : les 4 fiches du catalogue Online ; sprites Lamuline `rodeur`, `charo`, `ombre` (Mystique déchu), `colosse`.
+- **Sprites animés** (`ANIM`) : bandes de 6 images `img/m/<spr>_<pose>.webp` (poses idle, special, walk, atk, atk2), découpées depuis une planche 6×5 de Valentin ; `drawAnim()`/`frameAnim()`. Sans pose « mort », le cadavre est l'image de repos couchée et assombrie. Premier : le **Kobold** (7 PV, 3 XP d'après les tests d'Online ; DEF 2, Dégâts +1, Griffes WW et Rapide provisoires).
 - **Carte** : `img/bg.webp` de Lamuline, cases marchables = masque `WALK` (clairière + chemins), A* `chemin()`.
 - **UI** : charte d'Online thème sombre (variables `--…`, Killam, ronds de talent, journal à tons), cadre et barre façon Defenders.
 

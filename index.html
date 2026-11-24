@@ -118,7 +118,7 @@ canvas#c{position:fixed;inset:0;width:100%;height:100%;display:block;cursor:poin
 <div class="dlg" id="fin"><div class="win panel"><h2 style="justify-content:center" id="finT"></h2><p id="finP"></p><button class="btn main" id="bRe">Recommencer</button></div></div>
 <script>
 'use strict';
-const VERSION='0.1';
+const VERSION='0.2';
 document.title='Amertüme ISO v'+VERSION;
 
 /* ================= Règles d'Amertüme (moteur d'Amertüme Online, adapté au temps réel) =================
@@ -157,9 +157,13 @@ const ADV={
  rodeur:{nom:'Rôdeur famélique',type:'standard',famille:'Bête',pv:6,def:3,degats:2,xp:5,spr:'rodeur',att:[{nom:'Griffes',des:'WW'}]},
  charo:{nom:'Charognard enragé',type:'standard',famille:'Charognard',pv:8,def:2,degats:3,xp:7,rapide:1,spr:'charo',att:[{nom:'Morsure',des:'WL'}]},
  mystique:{nom:'Mystique déchu',type:'solitaire',famille:'Humanoïde',pv:14,def:4,degats:2,xp:15,spr:'ombre',distance:1,att:[{nom:'Boule de feu',des:'BB',feu:1}]},
+ // Kobold : 7 PV et 3 XP (tests d'Online) ; DEF, Dégâts, attaque et Rapide provisoires en attendant sa fiche.
+ kobold:{nom:'Kobold',type:'standard',famille:'Kobold',pv:7,def:2,degats:1,xp:3,spr:'kobold',rapide:1,att:[{nom:'Griffes',des:'WW'}]},
  colosse:{nom:'Colosse d’Amertume',type:'boss',famille:'Colosse',pv:30,def:5,degats:4,xp:40,spr:'colosse',boss:1,att:[{nom:'Coup massif',des:'RRR'},{nom:'Onde de choc',des:'WW',tous:1,auSol:1}]}};
 // Taille dessinée du pas w1 (½ de la taille du fichier), comme MS dans Defenders.
-const MS={rodeur:[28.5,17],charo:[19.5,27],ombre:[28,29.5],colosse:[93,88]};
+const MS={rodeur:[28.5,17],charo:[19.5,27],ombre:[28,29.5],colosse:[93,88],kobold:[34,34]};
+// Sprites animés : bandes de 6 images (img/m/<spr>_<pose>.webp), dessinées à ½ ; pieds à 74/77 de la hauteur.
+const ANIM={kobold:{n:6,pieds:74/77,poses:['idle','special','walk','atk','atk2']}};
 // Talents du Destructeur (combat.js d'Amertüme Online) ; « de » = talent de base d'une amélioration.
 const TAL={
  destructeur:{nom:'Destructeur',type:'mait',ic:'talent_destructeur',inne:1,txt:'Avec une arme au contact, <b>tous vos doubles</b> sont des critiques ; un double 1 reste un échec.'},
@@ -207,7 +211,8 @@ function ligneLibre(x0,y0,x1,y1){const n=Math.ceil(Math.hypot(x1-x0,y1-y0)/8);fo
 /* ================= Images ================= */
 const IMG={},img=s=>{if(!IMG[s]){const i=new Image();i.src=s;IMG[s]=i}return IMG[s]},ok=i=>i&&i.complete&&i.naturalWidth;
 img('img/bg.webp');for(const p of ['idle','w1','w2','atk'])img('img/u/borr_'+p+'.webp');
-for(const s of Object.keys(MS))for(const p of ['w1','w2','atk','dead']){img('img/m/'+s+'_'+p+'.webp');if(p!=='dead')img('img/m/'+s+'_'+p+'_rim.webp')}
+for(const s in ANIM)for(const p of ANIM[s].poses)img('img/m/'+s+'_'+p+'.webp');
+for(const s of Object.keys(MS).filter(s=>!ANIM[s]))for(const p of ['w1','w2','atk','dead']){img('img/m/'+s+'_'+p+'.webp');if(p!=='dead')img('img/m/'+s+'_'+p+'_rim.webp')}
 const FXN=['slash','death','lvlup','fire','flame','boom','heal','holy','rock'];FXN.forEach(k=>img('img/fx/'+k+'.webp'));
 
 /* ================= État ================= */
@@ -219,7 +224,7 @@ function nouveau(){
   path:[],cible:null,prochain:0,walk:0,atk:0,auSol:0,coma:0,cd:{frappe:0},criUtilise:0,potions:3,reposCourts:0,reposOk:1};
  hero.pv=pvMax();const s=snap(520,600);hero.x=s.x;hero.y=s.y;
  S={t:0,mons:[],corps:[],fx:[],txt:[],proj:[],combat:0,horsCombat:0,log:[]};
- const camps=[['rodeur',760,430,2],['rodeur',1060,560,2],['charo',330,250,2],['charo',1000,330,2],['mystique',720,250,1],['mystique',1290,720,1],['colosse',1395,205,1]];
+ const camps=[['rodeur',760,430,2],['rodeur',1060,560,2],['charo',330,250,2],['charo',1000,330,2],['mystique',720,250,1],['mystique',1290,720,1],['kobold',600,360,2],['colosse',1395,205,1]];
  for(const [t,x,y,n] of camps)campe(t,x,y,n);
  cam.x=hero.x;cam.y=hero.y;document.getElementById('journal').innerHTML='';
  jlog('carte','<span class="hro">'+hero.nom+'</span> entre dans la clairière.');majTout()}
@@ -257,7 +262,7 @@ function blesse(c,tot,crit,src){if(tot<=0){float(c.x,c.y-hauteur(c),'0','#ddd');
  if(crit){spark(c.x,c.y-hauteur(c)*.5,'#ffd34a',12);shake=Math.max(shake,.18)}
  if(c===hero){if(S.combat&&!hero.coma)gainRage(1);if(hero.pv<=0)coma();majTout()}
  else if(c.pv<=0)meurt(c,src);else{c.aggro=1;aggroCamp(c)}}
-function meurt(m,src){m.pv=0;S.corps.push({spr:m.d.spr,x:m.x,y:m.y,face:m.face,life:0});fx('death',m.x,m.y-m.h*.5,{sz:Math.max(40,m.w*1.2)});
+function meurt(m,src){m.pv=0;S.corps.push({spr:m.d.spr,x:m.x,y:m.y,face:m.face,life:0,h:m.h});fx('death',m.x,m.y-m.h*.5,{sz:Math.max(40,m.w*1.2)});
  const xp=m.d.xp*xpMul,av=marques();hero.xp+=xp;float(m.x,m.y-m.h-14,'+'+xp+' XP','#e2ae72');
  if(src===hero&&has('rage_tue'))gainRage(1);
  if(marques()>av){fx('lvlup',hero.x,hero.y-24,{sz:90,dur:.8});float(hero.x,hero.y-70,'+1 Marque','#ffd34a',1);flashRond('bTal')}
@@ -337,7 +342,7 @@ function step(dt){S.t+=dt;
  for(const c of S.corps)c.life+=dt;S.corps=S.corps.filter(c=>c.life<60);
  if(shake>0)shake-=dt;
  if(!vivants().length&&!S.gagne){S.gagne=1;fin('Clairière nettoyée','Tous les adversaires sont tombés. Le MJ peut en poser d’autres.',1)}}
-function attaqueAdv(m){if(hero.coma)return;const d=m.d;m.n++;const a=d.boss&&m.n%3===0?d.att[1]:d.att[0];m.atk=.4;
+function attaqueAdv(m){if(hero.coma)return;const d=m.d;m.n++;const a=d.boss?(m.n%3===0?d.att[1]:d.att[0]):d.att[(m.n+1)%d.att.length];m.atk=ANIM[d.spr]?.6:.4;
  const l=lancer(a.des);const go=()=>frapper(m,[hero],l,{bonus:d.degats,nom:a.nom,feu:a.feu,auSol:a.auSol});
  if(d.distance){fx('fire',m.x,m.y-m.h*.6,{sz:30,dur:.3});S.proj.push({x0:m.x,y0:m.y-m.h*.6,x:m.x,y:m.y,t:0,dur:Math.max(.25,dist(m,hero)/400),hit:go})}else{go();if(a.tous)fx('rock',m.x,m.y-10,{sz:140})}}
 
@@ -357,11 +362,18 @@ function drawHero(t){const u=hero;ombre(u.x,u.y+1,13,5,.45);anneau(u.x,u.y,15,`r
  g.scale(u.face,1);g.drawImage(im,pose==='atk'?-iw/2:-w/2,-h+2.5,w,h);g.restore()}
 function drawMon(m,t,hov){const sp=m.d.spr,pose=m.atk>0?'atk':m.walk>0&&Math.floor(m.walk/2.4)%2?'w2':'w1',rim=IMG['img/m/'+sp+'_'+pose+'_rim.webp'],im0=IMG['img/m/'+sp+'_'+pose+'.webp'],useR=ok(rim),im=useR?rim:im0;
  ombre(m.x,m.y+1,m.w*.34+3,m.w*.11+2.5,.45);if(hov||m===hero.cible)anneau(m.x,m.y,m.w*.42+6,'#e2565f',2);else if(m.d.boss)anneau(m.x,m.y,m.w*.42+6,'rgba(226,86,95,.45)',2);
+ if(ANIM[sp])return drawAnim(m,t,hov);
  if(!ok(im))return;const pd=useR?2:0,w=im.naturalWidth/2-pd*2,h=im.naturalHeight/2-pd*2,iw=MS[sp][0],bob=pose==='atk'?0:Math.abs(Math.sin(m.walk*1.3))*m.h*.03;
  g.save();g.translate(m.x,m.y);g.scale(m.face,1);if(m.etats.Feu)g.filter='sepia(.8) saturate(2.6) brightness(1.1)';else if(hov)g.filter='brightness(1.25)';
- g.drawImage(im,(pose==='atk'?-iw/2:-w/2)-pd,-h+2-bob-pd,w+pd*2,h+pd*2);g.restore();
- if(m.pv<m.d.pv||hov||m.aggro){const bw=Math.max(26,m.w*.6),y=m.y-m.h-8;g.fillStyle='#000a';g.fillRect(m.x-bw/2-1,y-1,bw+2,5);g.fillStyle='#c0392b';g.fillRect(m.x-bw/2,y,bw*Math.max(0,m.pv/m.d.pv),3);
+ g.drawImage(im,(pose==='atk'?-iw/2:-w/2)-pd,-h+2-bob-pd,w+pd*2,h+pd*2);g.restore();barreVie(m,hov)}
+function barreVie(m,hov){if(m.pv<m.d.pv||hov||m.aggro){const bw=Math.max(26,m.w*.6),y=m.y-m.h-8;g.fillStyle='#000a';g.fillRect(m.x-bw/2-1,y-1,bw+2,5);g.fillStyle='#c0392b';g.fillRect(m.x-bw/2,y,bw*Math.max(0,m.pv/m.d.pv),3);
   let ex=m.x-bw/2;for(const [e,n] of Object.entries(m.etats)){if(!n)continue;const ic=ETAT_IC[e]?img(ETAT_IC[e]):null;if(ok(ic))g.drawImage(ic,ex,y-12,10,10);ex+=11}}}
+function frameAnim(sp,pose,f,x,y,face,filt,rot){const A=ANIM[sp],im=IMG['img/m/'+sp+'_'+pose+'.webp'];if(!ok(im))return;const fw=im.naturalWidth/A.n,fh=im.naturalHeight,w=fw/2,h=fh/2;
+ g.save();g.translate(x,y);if(rot)g.rotate(rot);g.scale(face,1);if(filt)g.filter=filt;g.drawImage(im,Math.min(A.n-1,f)*fw,0,fw,fh,-w/2,-h*A.pieds,w,h);g.restore()}
+function drawAnim(m,t,hov){const A=ANIM[m.d.spr];let pose='idle',f=Math.floor(t*7+m.id)%A.n;
+ if(m.atk>0){pose=m.n%2?'atk':'atk2';f=Math.floor((1-m.atk/.6)*A.n)}else if(m.walk>0){pose='walk';f=Math.floor(m.walk)%A.n}
+ frameAnim(m.d.spr,pose,f,m.x,m.y,m.face,m.etats.Feu?'sepia(.8) saturate(2.6) brightness(1.1)':hov?'brightness(1.25)':'');
+ barreVie(m,hov)}
 function draw(t){g.setTransform(1,0,0,1,0,0);g.fillStyle='#000';g.fillRect(0,0,cv.width,cv.height);
  const z=cam.z*dpr,sx=shake>0?(Math.random()-.5)*6:0,sy=shake>0?(Math.random()-.5)*6:0;
  cam.x=Math.max(VW/2/cam.z,Math.min(WW-VW/2/cam.z,cam.x));cam.y=Math.max(VH/2/cam.z,Math.min(WH-VH/2/cam.z,cam.y));
@@ -370,7 +382,7 @@ function draw(t){g.setTransform(1,0,0,1,0,0);g.fillStyle='#000';g.fillRect(0,0,c
  const bg=IMG['img/bg.webp'];if(ok(bg))g.drawImage(bg,0,0,WW,WH);
  if(showAggro){g.globalAlpha=.25;g.fillStyle='#e2ae72';for(const k of WALK){const [i,j]=k.split(',').map(Number),p=iso(i,j);g.beginPath();g.moveTo(p.x,p.y-TH/2);g.lineTo(p.x+TW/2,p.y);g.lineTo(p.x,p.y+TH/2);g.lineTo(p.x-TW/2,p.y);g.closePath();g.stroke()}g.globalAlpha=1;
   for(const m of vivants())anneau(m.x,m.y,m.d.boss?190:150,m.aggro?'#e2565f':'#ffffff55',1)}
- for(const c of S.corps){const im=IMG['img/m/'+c.spr+'_dead.webp'];if(!ok(im))continue;const w=im.naturalWidth/2,h=im.naturalHeight/2;g.save();g.globalAlpha=Math.max(0,Math.min(.9,(60-c.life)/5));g.translate(c.x,c.y);g.scale(c.face,1);g.drawImage(im,-w/2,-h+3,w,h);g.restore()}
+ for(const c of S.corps){if(ANIM[c.spr]){g.globalAlpha=Math.max(0,Math.min(.9,(60-c.life)/5));frameAnim(c.spr,'idle',0,c.x,c.y-4,c.face,'brightness(.45) saturate(.6)',1.4*c.face);g.globalAlpha=1;continue}const im=IMG['img/m/'+c.spr+'_dead.webp'];if(!ok(im))continue;const w=im.naturalWidth/2,h=im.naturalHeight/2;g.save();g.globalAlpha=Math.max(0,Math.min(.9,(60-c.life)/5));g.translate(c.x,c.y);g.scale(c.face,1);g.drawImage(im,-w/2,-h+3,w,h);g.restore()}
  if(hero.path.length&&!hero.cible){const p=hero.path[hero.path.length-1];anneau(p.x,p.y,8+Math.sin(t*6)*2,'#e2ae72',1.5)}
  const hov=survol;const L=[...vivants(),hero].sort((a,b)=>a.y-b.y);for(const e of L)e===hero?drawHero(t):drawMon(e,t,e===hov);
  for(const p of S.proj)fxFrame('fire',Math.floor(p.t*20)%6,p.x,p.y,34);
