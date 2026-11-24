@@ -158,7 +158,7 @@ body.edition #bar,body.edition #frame,body.edition #journal{display:none}
 <div class="dlg" id="fin"><div class="win panel"><h2 style="justify-content:center" id="finT"></h2><p id="finP"></p><button class="btn main" id="bRe">Recommencer</button></div></div>
 <script>
 'use strict';
-const VERSION='0.4';
+const VERSION='0.5';
 document.title='Amertüme ISO v'+VERSION;
 
 /* ================= Règles d'Amertüme (moteur d'Amertüme Online, adapté au temps réel) =================
@@ -268,8 +268,8 @@ function ligneLibre(x0,y0,x1,y1){const n=Math.ceil(Math.hypot(x1-x0,y1-y0)/8);fo
 
 /* ================= Images ================= */
 const IMG={},img=s=>{if(!IMG[s]){const i=new Image();i.src=s;IMG[s]=i}return IMG[s]},ok=i=>i&&i.complete&&i.naturalWidth;
-// Hrolf : planche 6 × 7 découpée en bandes de 6 images ; il regarde à gauche sur la planche.
-const HANIM={n:6,pieds:.965,poses:['idle','walk','atk','furie','cri','sol','mort']};
+// Hrolf : planche 6 × 7 découpée en bandes de 6 images ; découpée par tools/decoupe_hrolf.py : images alignées sur les pieds, toutes tournées vers la droite.
+const HANIM={n:6,pieds:.968,poses:['idle','walk','atk','furie','cri','sol','mort']};
 img(CARTE.fond);for(const p of HANIM.poses)img('img/u/hrolf_'+p+'.webp');
 for(const s in ANIM)for(const p of ANIM[s].poses)img('img/m/'+s+'_'+p+'.webp');
 for(const s of Object.keys(MS).filter(s=>!ANIM[s]))for(const p of ['w1','w2','atk','dead']){img('img/m/'+s+'_'+p+'.webp');if(p!=='dead')img('img/m/'+s+'_'+p+'_rim.webp')}
@@ -368,7 +368,7 @@ function step(dt){S.t+=dt;
   if(hero.cible&&hero.cible.pv<=0)hero.cible=null;
   if(hero.cible){if(contact(hero,hero.cible))hero.path=[];else if(!hero.path.length||S.t>(hero.repath||0)){hero.path=chemin(hero.x,hero.y,hero.cible.x,hero.cible.y);hero.repath=S.t+.3}}
   if(hero.path.length){const p=hero.path[0],dx=p.x-hero.x,dy=p.y-hero.y,d=Math.hypot(dx,dy),sp=78*dt;
-   if(Math.abs(dx)>1)hero.face=dx>0?1:-1;if(d<=sp){hero.x=p.x;hero.y=p.y;hero.path.shift()}else{hero.x+=dx/d*sp;hero.y+=dy/d*sp}hero.walk+=dt*10}
+   if(Math.abs(dx)>1)hero.face=dx>0?1:-1;if(d<=sp){hero.x=p.x;hero.y=p.y;hero.path.shift()}else{hero.x+=dx/d*sp;hero.y+=dy/d*sp}hero.walk+=Math.min(d,sp)}
   else{hero.walk=0;if(S.t>=hero.prochain){const c=hero.cible&&contact(hero,hero.cible)?hero.cible:null;if(c||vivants().some(m=>contact(hero,m)&&m.aggro))attaqueHeros(c)}}}
  // Adversaires
  let enCombat=0;
@@ -424,9 +424,9 @@ function drawHero(t){const u=hero;ombre(u.x,u.y+1,13,5,.45);anneau(u.x,u.y,15,`r
  // Une animation jouée (attaque, Frappe Furieuse, Cri, au sol, mort) passe avant la marche et le repos ; la mort et le Coma restent couchés.
  const a=u.anim,k=a?(S.t-a.t)/a.dur:1;let pose,f;
  if(u.mort){pose='mort';f=Math.floor(Math.min(.99,k)*6)}else if(u.coma){pose='sol';f=3}
- else if(a&&k<1){pose=a.pose;f=Math.floor(k*6)}else if(u.walk>0){pose='walk';f=Math.floor(u.walk*.8)%6}else{pose='idle';f=Math.floor(t*6)%6}
+ else if(a&&k<1){pose=a.pose;f=Math.floor(k*6)}else if(u.walk>0){pose='walk';f=Math.floor(u.walk/6.5)%6}else{pose='idle';f=Math.floor(t*6)%6}
  const im=IMG['img/u/hrolf_'+pose+'.webp'];if(!ok(im))return;const fw=im.naturalWidth/6,fh=im.naturalHeight,w=fw/2,h=fh/2;
- g.save();g.translate(u.x,u.y);g.scale(-u.face,1);if(u.coma&&!u.mort)g.filter='grayscale(.6) brightness(.8)';g.drawImage(im,f*fw,0,fw,fh,-w/2,-h*HANIM.pieds,w,h);g.restore()}
+ g.save();g.translate(u.x,u.y);g.scale(u.face,1);if(u.coma&&!u.mort)g.filter='grayscale(.6) brightness(.8)';g.drawImage(im,f*fw,0,fw,fh,-w/2,-h*HANIM.pieds,w,h);g.restore()}
 function drawMon(m,t,hov){const sp=m.d.spr,pose=m.atk>0?'atk':m.walk>0&&Math.floor(m.walk/2.4)%2?'w2':'w1',rim=IMG['img/m/'+sp+'_'+pose+'_rim.webp'],im0=IMG['img/m/'+sp+'_'+pose+'.webp'],useR=ok(rim),im=useR?rim:im0;
  ombre(m.x,m.y+1,m.w*.34+3,m.w*.11+2.5,.45);if(hov||m===hero.cible)anneau(m.x,m.y,m.w*.42+6,'#e2565f',2);else if(m.d.boss)anneau(m.x,m.y,m.w*.42+6,'rgba(226,86,95,.45)',2);
  if(ANIM[sp])return drawAnim(m,t,hov);
@@ -579,8 +579,8 @@ $('rTour').oninput=e=>{REG.tour=+e.target.value;TOUR=REG.tour;majReg()};
 majReg();
 // Portrait : la tête du sprite du Destructeur.
 function portrait(){const im=IMG['img/u/hrolf_idle.webp'];if(!ok(im))return setTimeout(portrait,100);const p=$('portrait').getContext('2d'),fw=im.naturalWidth/6;
- // Tête dans l'image 0 du repos : centre x ≈ 0,65, haut à 0,2 de l'image.
- p.imageSmoothingQuality='high';p.drawImage(im,fw*.46,im.naturalHeight*.19,fw*.4,fw*.4,0,0,152,152)}
+ // Tête dans l'image 0 du repos : centre x ≈ 0,48, haut à 0,22 de l'image.
+ p.imageSmoothingQuality='high';p.drawImage(im,fw*.33,im.naturalHeight*.19,fw*.3,fw*.3,0,0,152,152)}
 
 let last=performance.now(),acc=0;
 function loop(now){const dt=Math.min(.05,(now-last)/1000);last=now;
@@ -589,7 +589,7 @@ function loop(now){const dt=Math.min(.05,(now-last)/1000);last=now;
  if(!paused&&Math.floor(S.t*4)!==Math.floor((S.t-dt)*4))majTout();requestAnimationFrame(loop)}
 nouveau();portrait();requestAnimationFrame(loop);
 // Accroches de test (tools/smoke.js)
-window.__test={get S(){return S},get hero(){return hero},step,ordre:(x,y)=>{hero.cible=null;hero.path=chemin(hero.x,hero.y,x,y)},cible:m=>{hero.cible=m},frappeFurieuse,criDeGuerre,reposCourt,potion,lancer,resoudre,pause:v=>{paused=v},entreEdit,get WALK(){return WALK}};
+window.__test={get S(){return S},get hero(){return hero},step,ordre:(x,y)=>{hero.cible=null;hero.path=chemin(hero.x,hero.y,x,y)},cible:m=>{hero.cible=m},frappeFurieuse,criDeGuerre,reposCourt,potion,lancer,resoudre,pause:v=>{paused=v},get cam(){return cam},entreEdit,get WALK(){return WALK}};
 window.addEventListener('error',e=>{(window.__errs=window.__errs||[]).push(e.message)});
 </script>
 </body>
