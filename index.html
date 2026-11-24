@@ -160,7 +160,7 @@ body.edition #bar,body.edition #frame,body.edition #fsous,body.edition #journal{
 <div class="dlg" id="fin"><div class="win panel"><h2 style="justify-content:center" id="finT"></h2><p id="finP"></p><button class="btn main" id="bRe">Recommencer</button></div></div>
 <script>
 'use strict';
-const VERSION='0.6';
+const VERSION='0.7';
 document.title='Amertüme ISO v'+VERSION;
 
 /* ================= Règles d'Amertüme (moteur d'Amertüme Online, adapté au temps réel) =================
@@ -271,7 +271,7 @@ function ligneLibre(x0,y0,x1,y1){const n=Math.ceil(Math.hypot(x1-x0,y1-y0)/8);fo
 /* ================= Images ================= */
 const IMG={},img=s=>{if(!IMG[s]){const i=new Image();i.src=s;IMG[s]=i}return IMG[s]},ok=i=>i&&i.complete&&i.naturalWidth;
 // Hrolf : planche 6 × 7 découpée en bandes de 6 images ; découpée par tools/decoupe_hrolf.py : images alignées sur les pieds, toutes tournées vers la droite.
-const HANIM={n:6,pieds:.968,poses:['idle','walk','atk','furie','cri','sol','mort']};
+const HANIM={n:6,pieds:.968,seq:{atk:[0,2,2,3,3,5],furie:[0,1,2,3,3,5]},poses:['idle','walk','atk','furie','cri','sol','mort']};
 ['ellipse_sol','fine_cadre_fer','fine_rouge'].forEach(n=>img('img/ui/'+n+'.webp'));
 img(CARTE.fond);for(const p of HANIM.poses)img('img/u/hrolf_'+p+'.webp');
 for(const s in ANIM)for(const p of ANIM[s].poses)img('img/m/'+s+'_'+p+'.webp');
@@ -342,7 +342,7 @@ function finCombat(){S.combat=0;for(const k of Object.keys(hero.etats))delete he
 function attaqueHeros(cible,o){o=o||{};const auc=vivants().filter(m=>contact(hero,m)).sort((a,b)=>(a===cible?-1:b===cible?1:dist(hero,a)-dist(hero,b)));if(!auc.length)return false;
  const n=has('double_tourbillon')?99:has('double')?2:1,cibles=auc.slice(0,n);
  const l=lancer(hero.arme.des+(o.mortel?'M':''),{doubles:has('destructeur')});
- hero.face=cibles[0].x>=hero.x?1:-1;anime(o.nom==='Frappe Furieuse'?'furie':'atk',Math.min(.6,(hero.arme.cadence||2)*.8));
+ if(Math.abs(cibles[0].x-hero.x)>4)hero.face=cibles[0].x>=hero.x?1:-1;anime(o.nom==='Frappe Furieuse'?'furie':'atk',Math.min(.6,(hero.arme.cadence||2)*.8));
  frapper(hero,cibles,l,{bonus:bonusDeg(),nom:o.nom,saignee:o.saignee});
  if(l.crit){if(has('rage_crit'))gainRage(1);if(has('enrag'))hero.enrag+=has('enrag_plus')?2:1}
  if(hero.etats.Poison&&!hero.coma){blesse(hero,hero.etats.Poison,0);jlog('etat','<span class="hro">'+hero.nom+'</span> subit son <b>Poison</b> : <b>'+hero.etats.Poison+'</b>.')}
@@ -371,7 +371,7 @@ function step(dt){S.t+=dt;
   if(hero.cible&&hero.cible.pv<=0)hero.cible=null;
   if(hero.cible){if(contact(hero,hero.cible))hero.path=[];else if(!hero.path.length||S.t>(hero.repath||0)){hero.path=chemin(hero.x,hero.y,hero.cible.x,hero.cible.y);hero.repath=S.t+.3}}
   if(hero.path.length){const p=hero.path[0],dx=p.x-hero.x,dy=p.y-hero.y,d=Math.hypot(dx,dy),sp=64*dt;
-   if(Math.abs(dx)>1)hero.face=dx>0?1:-1;if(d<=sp){hero.x=p.x;hero.y=p.y;hero.path.shift()}else{hero.x+=dx/d*sp;hero.y+=dy/d*sp}hero.walk+=Math.min(d,sp)}
+   if(Math.abs(dx)>4&&Math.abs(dx)>Math.abs(dy)*.6)hero.face=dx>0?1:-1;if(d<=sp){hero.x=p.x;hero.y=p.y;hero.path.shift()}else{hero.x+=dx/d*sp;hero.y+=dy/d*sp}hero.walk+=Math.min(d,sp)}
   else{hero.walk=0;if(S.t>=hero.prochain){const c=hero.cible&&contact(hero,hero.cible)?hero.cible:null;if(c||vivants().some(m=>contact(hero,m)&&m.aggro))attaqueHeros(c)}}}
  // Adversaires
  let enCombat=0;
@@ -386,12 +386,12 @@ function step(dt){S.t+=dt;
    if(!m.pat&&S.t>=(m.patT??(m.patT=S.t+Math.random()*4))){const a=Math.random()*6.28,ray=(d.boss?15:12)+Math.random()*(d.boss?25:38),px=m.hx+Math.cos(a)*ray,py=m.hy+Math.sin(a)*ray*.5;if(walkXY(px,py))m.pat={x:px,y:py};else m.patT=S.t+1}
    if(m.pat){bx=m.pat.x;by=m.pat.y;lent=.35}}
   else{m.pat=null;enCombat=1;const portee=d.distance?240:0;
-   if(d.distance?dist(m,hero)<=portee&&ligneLibre(m.x,m.y,hero.x,hero.y):contact(m,hero)){m.face=hero.x>=m.x?1:-1;
+   if(d.distance?dist(m,hero)<=portee&&ligneLibre(m.x,m.y,hero.x,hero.y):contact(m,hero)){if(Math.abs(hero.x-m.x)>4)m.face=hero.x>=m.x?1:-1;
     if(S.t>=m.prochain){attaqueAdv(m);m.prochain=S.t+TOUR}
     if(d.distance&&dist(m,hero)<110){bx=m.x+(m.x-hero.x);by=m.y+(m.y-hero.y)}}
    else{bx=hero.x;by=hero.y}}
   if(bx!==null){const dx=bx-m.x,dy=by-m.y,dd=Math.hypot(dx,dy);if(dd>2){const sp=(d.rapide?80:52)*(m.retour?1.6:1)*lent*dt,nx=m.x+dx/dd*sp,ny=m.y+dy/dd*sp;
-   if(walkXY(nx,ny)){m.x=nx;m.y=ny}else if(walkXY(nx,m.y))m.x=nx;else if(walkXY(m.x,ny))m.y=ny;m.walk+=dt*10*lent;if(Math.abs(dx)>1)m.face=dx>0?1:-1}else m.walk=0}else m.walk=0;
+   if(walkXY(nx,ny)){m.x=nx;m.y=ny}else if(walkXY(nx,m.y))m.x=nx;else if(walkXY(m.x,ny))m.y=ny;m.walk+=dt*10*lent;if(Math.abs(dx)>4&&Math.abs(dx)>Math.abs(dy)*.6)m.face=dx>0?1:-1}else m.walk=0}else m.walk=0;
   // Feu : à chaque tour, n dés noirs sans DEF.
   if(m.etats.Feu&&S.t>=(m.feuT||(m.feuT=S.t+TOUR))){m.feuT=S.t+TOUR;let n=0;for(let k=0;k<m.etats.Feu;k++)n+=d6();fx('flame',m.x,m.y-m.h*.5,{sz:40});blesse(m,n,0,hero)}}
  // Séparation des socles
@@ -425,11 +425,11 @@ function anime(pose,dur){hero.anim={pose,t:S.t,dur}}
 function drawHero(t){const u=hero;ombre(u.x,u.y+1,13,5,.45);const el=IMG['img/ui/ellipse_sol.webp'];if(ok(el)){g.globalAlpha=.75+Math.sin(t*3)*.2;g.drawImage(el,u.x-17,u.y-7,34,14.4);g.globalAlpha=1}
  if(u.etats.Rage)anneau(u.x,u.y,19,'rgba(212,85,42,.75)',1.5+Math.min(4,u.etats.Rage*.3));
  // Une animation jouée (attaque, Frappe Furieuse, Cri, au sol, mort) passe avant la marche et le repos ; la mort et le Coma restent couchés.
- const a=u.anim,k=a?(S.t-a.t)/a.dur:1;let pose,f,souffle=1;
+ const a=u.anim,k=a?(S.t-a.t)/a.dur:1;let pose,f,souffle=1,bob=0;
  if(u.mort){pose='mort';f=Math.floor(Math.min(.99,k)*6)}else if(u.coma){pose='sol';f=3}
- else if(a&&k<1){pose=a.pose;f=Math.floor(k*6)}else if(u.walk>0){pose='walk';f=Math.floor(u.walk/4.8)%6}else{pose='idle';f=0;souffle=1+Math.sin(t*2.4)*.012}
+ else if(a&&k<1){pose=a.pose;f=Math.floor(k*6);if(HANIM.seq[pose])f=HANIM.seq[pose][f]}else if(u.walk>0){pose='walk';f=Math.floor(u.walk/4.8)%6;bob=[1,.3,-.6,1,.3,-.6][f]}else{pose='idle';f=0;souffle=1+Math.sin(t*2.4)*.012}
  const im=IMG['img/u/hrolf_'+pose+'.webp'];if(!ok(im))return;const fw=im.naturalWidth/6,fh=im.naturalHeight,w=fw/2,h=fh/2;
- g.save();g.translate(u.x,u.y);g.scale(u.face,souffle);if(u.coma&&!u.mort)g.filter='grayscale(.6) brightness(.8)';g.drawImage(im,f*fw,0,fw,fh,-w/2,-h*HANIM.pieds,w,h);g.restore()}
+ g.save();g.translate(u.x,u.y+bob);g.scale(u.face,souffle);if(u.coma&&!u.mort)g.filter='grayscale(.6) brightness(.8)';g.drawImage(im,f*fw,0,fw,fh,-w/2,-h*HANIM.pieds,w,h);g.restore()}
 function drawMon(m,t,hov){const sp=m.d.spr,pose=m.atk>0?'atk':m.walk>0&&Math.floor(m.walk/2.4)%2?'w2':'w1',rim=IMG['img/m/'+sp+'_'+pose+'_rim.webp'],im0=IMG['img/m/'+sp+'_'+pose+'.webp'],useR=ok(rim),im=useR?rim:im0;
  ombre(m.x,m.y+1,m.w*.34+3,m.w*.11+2.5,.45);if(hov||m===hero.cible)anneau(m.x,m.y,m.w*.42+6,'#e2565f',2);else if(m.d.boss)anneau(m.x,m.y,m.w*.42+6,'rgba(226,86,95,.45)',2);
  if(ANIM[sp])return drawAnim(m,t,hov);

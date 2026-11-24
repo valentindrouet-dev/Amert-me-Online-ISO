@@ -33,8 +33,12 @@ def ancre(f,tete):
   bas=max(y for x,y in ok);haut=min(y for x,y in ok)
   if tete: bande=[x for x,y in ok if y<=haut+(bas-haut)*.16]
   else: bande=[x for x,y in ok if y>=bas-h*.12 and y>=h*.5] or [x for x,y in ok]
-  return sum(bande)/len(bande),bas
+  return sum(bande)/len(bande),(haut if tete else bas)
 A={k:ancre(f,k[0]==1) for k,f in frames.items()}
+# Marche : la tête est calée en hauteur aussi (la planche la fait sauter de ±2 px) ; le jeu ajoute un balancement régulier.
+hw=[f.size[1] for k,f in frames.items() if k[0]==1];hw.sort();Dm=hw[len(hw)//2]-1
+for k in list(A):
+  if k[0]==1:A[k]=(A[k][0],A[k][1]+Dm)
 L=max(ax for (ax,ay) in A.values());Rt=max(f.size[0]-A[k][0] for k,f in frames.items());Hh=max(A[k][1] for k in frames);Bb=max(f.size[1]-A[k][1] for k,f in frames.items())
 half=int(max(L,Rt))+2;FW,FH=2*half,int(Hh+Bb)+4;base=int(Hh)+1
 ow,oh=round(FW*K),round(FH*K);print('image',ow,oh,'pieds',round(base/FH,3))
