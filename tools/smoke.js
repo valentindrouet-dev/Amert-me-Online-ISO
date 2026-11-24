@@ -9,6 +9,12 @@ const ROOT=path.join(__dirname,'..'),TYPES={html:'text/html',webp:'image/webp',p
  p.on('pageerror',e=>errs.push(e.message));p.on('console',m=>{if(m.type()==='error'||m.type()==='assert')errs.push(m.text())});
  const shot=process.argv[2]||'smoke-0.png';
  await p.goto('http://jeu.local/');await p.waitForTimeout(1500);await p.screenshot({path:shot});
+ // Éditeur de carte : entrer, peindre à la souris, ressortir sans erreur ; le sol peint reste marchable.
+ await p.keyboard.press('m');await p.click('#mjEdit');await p.click('#edOutils [data-o="sol"]');
+ await p.mouse.move(300,300);await p.mouse.down();await p.mouse.move(380,330,{steps:5});await p.mouse.up();
+ await p.waitForTimeout(200);await p.screenshot({path:shot.replace(/0\.png$/,'edit.png')});
+ const n=await p.evaluate(()=>__test.WALK.size);await p.click('#edJouer');await p.keyboard.press('m');
+ if(await p.evaluate(()=>__test.WALK.size)!==n)errs.push('édition : le sol peint est perdu');
  // Le héros attaque l'adversaire le plus proche, achète ses talents, se repose, boit ses potions.
  const joue=n=>p.evaluate(n=>{const T=__test;T.pause(true);const S=T.S,h=T.hero;window.__c=window.__c||{comas:0,was:0};const c=window.__c;
   for(let k=0;k<n&&S.mons.length&&h.vie>0;k++){if(!h.cible||h.cible.pv<=0){const m=S.mons.filter(m=>m.pv>0).sort((a,b)=>Math.hypot(a.x-h.x,a.y-h.y)-Math.hypot(b.x-h.x,b.y-h.y))[0];if(m)T.cible(m)}

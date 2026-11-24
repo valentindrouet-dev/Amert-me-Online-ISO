@@ -47,6 +47,10 @@ Fusion d'**Amertüme Online** (système de règles) et des **Nuits de Lamuline /
 - **Carte** : `img/bg.webp` de Lamuline, cases marchables = masque `WALK` (clairière + chemins), A* `chemin()`.
 - **UI** : charte d'Online thème sombre (variables `--…`, Killam, ronds de talent, journal à tons), cadre et barre façon Defenders.
 
+- **Éditeur de carte** (MJ → « Éditer la carte ») : fond importé (PNG/JPEG/WebP, sa taille devient celle de la carte), sol / mur au pinceau sur la grille iso, départ, camps (palette du MJ), gomme ; clic droit + glisser pour déplacer la vue. `CARTE` = {nom, fond, w, h, walk, depart, camps} ; sauvée en localStorage (`amertume-iso-carte`) ou exportée/importée en JSON, toujours passée par `valideCarte()`.
+- **Réglages** (panneau MJ, localStorage `amertume-iso-reglages`) : cadence de la hache (défaut 1,5 s) et durée d'un tour `TOUR` (défaut 6 s).
+- Boutons d'action carrés (demande de Valentin, écart volontaire aux ronds de la charte).
+
 ## Manque / provisoire
 - Sprites : pas de pose « à terre » du héros (sprite couché en filtre gris), pas de sprite d'attaque à distance du Mystique déchu (boule de feu = VFX `fire`).
 - Non portés : Esquive, Fuite du Colosse, Opportunité, Faille/Phase, sons, sauvegarde, multijoueur/MJ en ligne.

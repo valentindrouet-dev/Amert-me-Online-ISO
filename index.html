@@ -33,12 +33,12 @@ canvas#c{position:fixed;inset:0;width:100%;height:100%;display:block;cursor:poin
 #bar{position:fixed;left:50%;bottom:12px;transform:translateX(-50%);padding:10px 14px 8px;display:flex;flex-direction:column;align-items:center;gap:6px}
 #ronds{display:flex;gap:12px;align-items:flex-end}
 .rond{position:relative;width:62px;text-align:center;cursor:pointer}
-.rond .o{position:relative;width:56px;height:56px;margin:auto;border-radius:50%;border:4px solid var(--t);background:color-mix(in srgb,var(--t) 22%,#e9e3d5);display:grid;place-items:center;overflow:hidden;box-shadow:0 2px 6px #0008}
+.rond .o{position:relative;width:56px;height:56px;margin:auto;border-radius:12px;border:4px solid var(--t);background:color-mix(in srgb,var(--t) 22%,#e9e3d5);display:grid;place-items:center;overflow:hidden;box-shadow:0 2px 6px #0008}
 .rond .o img{width:40px;height:40px;object-fit:contain}
 .rond .o b{font-size:24px;color:var(--t)}
 .rond .n{font:600 11px system-ui;margin-top:3px;color:var(--ink);white-space:nowrap}
 .rond .h{position:absolute;top:-4px;right:0;font:700 11px system-ui;background:var(--panel-2);border:1px solid var(--line-strong);border-radius:6px;padding:0 4px}
-.rond .cd{position:absolute;inset:0;border-radius:50%;background:conic-gradient(#000b var(--p,0%),transparent 0)}
+.rond .cd{position:absolute;inset:0;border-radius:8px;background:conic-gradient(#000b var(--p,0%),transparent 0)}
 .rond .q{position:absolute;bottom:18px;right:-2px;font:700 12px system-ui;background:var(--panel);border-radius:8px;padding:0 4px}
 .rond.off .o{filter:grayscale(1) brightness(.6)}
 .rond.flash .o{animation:eclat .5s}
@@ -80,6 +80,11 @@ canvas#c{position:fixed;inset:0;width:100%;height:100%;display:block;cursor:poin
 .rond.lock{opacity:.45;cursor:default}
 #mj{position:fixed;right:12px;bottom:12px;padding:10px;display:none;width:240px}
 #mj.on{display:block}
+#edit{position:fixed;left:12px;bottom:12px;padding:10px;width:300px;display:none}#edit.on{display:block}
+#edit .row,.reg{display:flex;gap:6px;flex-wrap:wrap;margin:6px 0;align-items:center}
+.reg{font:600 12px system-ui;color:var(--muted);justify-content:space-between}.reg input{width:100%}
+#edMsg{font-size:12px;color:var(--accent);min-height:1em;margin:4px 0}
+body.edition #bar,body.edition #frame,body.edition #journal{display:none}
 #mj .row{display:flex;gap:6px;flex-wrap:wrap;margin:6px 0}
 #fin{z-index:11}
 #fin .win{text-align:center;width:420px}
@@ -112,13 +117,26 @@ canvas#c{position:fixed;inset:0;width:100%;height:100%;display:block;cursor:poin
  <div class="row" id="mjSpawn"></div>
  <div class="row"><button class="btn" id="mjLong">Repos long</button><button class="btn" id="mjAggro">Zones</button></div>
  <div class="row" id="mjXp"></div>
+ <div class="row"><button class="btn" id="mjEdit">Éditer la carte</button></div>
+ <div class="sec">Réglages</div>
+ <label class="reg">Cadence de la hache <b id="vCad"></b><input type="range" id="rCad" min="0.5" max="4" step="0.1"></label>
+ <label class="reg">Durée d’un tour <b id="vTour"></b><input type="range" id="rTour" min="2" max="8" step="0.5"></label>
+</div>
+<div id="edit" class="panel">
+ <div class="sec">Carte</div>
+ <div class="row" id="edOutils"><button class="btn on" data-o="sol">Sol</button><button class="btn" data-o="mur">Mur</button><button class="btn" data-o="depart">Départ</button><button class="btn" data-o="gomme">Gomme</button></div>
+ <div class="row" id="edPinceau"><span class="sec">Pinceau</span><button class="btn on" data-p="0">1</button><button class="btn" data-p="1">3</button><button class="btn" data-p="2">5</button></div>
+ <div class="row"><label class="btn">Fond…<input type="file" accept="image/*" id="edFond" hidden></label><button class="btn" id="edTout">Tout en sol</button><button class="btn" id="edVide">Tout en mur</button></div>
+ <div class="row"><button class="btn" id="edSauve">Sauver</button><button class="btn" id="edExport">Exporter</button><label class="btn">Importer<input type="file" accept=".json,application/json" id="edImport" hidden></label><button class="btn" id="edDemo">Démo</button></div>
+ <div id="edMsg"></div>
+ <div class="row"><button class="btn main" id="edJouer">Jouer</button></div>
 </div>
 <div id="tip" class="panel"></div>
 <div class="dlg" id="dTal"><div class="win panel"><h2><span>Talents du Destructeur</span><span class="x" data-close>✕</span></h2><div id="marques" class="sec" style="margin-bottom:10px"></div><div class="arbre" id="arbre"></div></div></div>
 <div class="dlg" id="fin"><div class="win panel"><h2 style="justify-content:center" id="finT"></h2><p id="finP"></p><button class="btn main" id="bRe">Recommencer</button></div></div>
 <script>
 'use strict';
-const VERSION='0.2';
+const VERSION='0.3';
 document.title='Amertüme ISO v'+VERSION;
 
 /* ================= Règles d'Amertüme (moteur d'Amertüme Online, adapté au temps réel) =================
@@ -126,7 +144,9 @@ document.title='Amertüme ISO v'+VERSION;
 const DES={W:['Simple','#ece7db'],L:['Léger','#dcb87f'],R:['Lourd','#c0392b',1],B:['Mystique','#3f7bc0',1],S:['Soin','#5fa45f'],M:['Mortel','#2b2b2b',1],P:['Phase','#d8c13a'],V:['Poison','#7b4bb3',1]};
 const ETATS={Rage:'#d4552a',Saignée:'#e2565f',Feu:'#f0903a',Poison:'#b968d3','Au sol':'#d39568',Coma:'#8a8474'};
 const ETAT_IC={Saignée:'img/etats/saignee.png',Feu:'img/etats/feu.png',Poison:'img/etats/poison.png','Au sol':'img/etats/ausol.png'};
-const TOUR=6;            // un « tour » en temps réel, en secondes : rythme des PA, du Feu
+// Réglages du MJ, gardés dans ce navigateur : cadence de l'arme du héros, durée d'un « tour » (rythme des PA, du Feu, des adversaires).
+const REG={cadence:1.5,tour:6};try{Object.assign(REG,JSON.parse(localStorage.getItem('amertume-iso-reglages'))||{})}catch(e){}
+let TOUR=REG.tour;
 const CADENCE=2,CADENCE_2M=3.5; // carte dynamique d'Amertüme Online : 2 s, 3,5 s à deux mains, sauf cadence d'arme
 const d6=()=>1+Math.floor(Math.random()*6);
 /* Lancer : les dés Légers doublés s'en vont, deux 1 = échec (hors Mortel/Poison), deux 6 = critique (Destructeur au contact :
@@ -186,13 +206,29 @@ const GLYPH={act:'⚔',bonus:'⚔',mait:'★',pass:'◆',ame:'⇧',reac:'↩',mv
 const tType=k=>TAL[k].de?'ame':TAL[k].type;
 
 /* ================= Carte (clairière de Defenders, grille iso 2:1) ================= */
-const WW=1672,WH=941,TW=64,TH=32,OX=905,OY=482;
+let WW=1672,WH=941;const TW=64,TH=32,OX=905,OY=482;
 const iso=(i,j)=>({x:OX+(i-j)*TW/2,y:OY+(i+j)*TH/2});
 function cellOf(x,y){const a=(x-OX)/(TW/2),b=(y-OY)/(TH/2);return{i:Math.round((a+b)/2),j:Math.round((b-a)/2)}}
 const WALK=new Set();'-14:2_4;-13:1_10;-12:-2_10;-11:-9_-8,-2_11;-10:-9_11;-9:-9_11;-8:-9_12;-7:-9_14;-6:-9_14;-5:-8_14;-4:-9_13;-3:-10_13;-2:-11_12;-1:-15_12;0:-15_-15,-12_12;1:-11_12;2:-11_12;3:-11_12;4:-11_12;5:-10_11;6:-10_11;7:-10_11;8:-11_11;9:-11_5;10:-4_-1,2_5;11:-2_-1'.split(';').forEach(r=>{const [i,rs]=r.split(':');rs.split(',').forEach(x=>{const [a,b]=x.split('_').map(Number);for(let j=a;j<=b;j++)WALK.add(i+','+j)})});
 const ENTRY=[[[-40,-10],[40,54],[110,128],[200,188],[290,232],[360,276],[425,312],[470,338]],[[1710,950],[1590,898],[1510,853],[1430,782],[1350,760],[1270,704],[1210,664],[1160,642]],[[1710,0],[1620,46],[1540,93],[1462,150],[1380,220],[1300,252],[1242,290],[1190,322]],[[-40,950],[40,893],[120,815],[200,762],[280,752],[340,724],[400,666],[455,644]]];
 for(const p of ENTRY)for(let k=0;k+1<p.length;k++){const [x0,y0]=p[k],[x1,y1]=p[k+1],n=Math.ceil(Math.hypot(x1-x0,y1-y0)/6);
  for(let s=0;s<=n;s++){const x=x0+(x1-x0)*s/n,y=y0+(y1-y0)*s/n;if(x<20||y<20||x>WW-20||y>WH-20)continue;const c=cellOf(x,y);for(let a=-1;a<=1;a++)for(let b=-1;b<=1;b++)WALK.add((c.i+a)+','+(c.j+b))}}
+/* Une carte : un fond, les cases de sol (« i,j » de la grille iso), le départ du héros, les camps d'adversaires [type,x,y,nombre]. */
+const DEMO={nom:'la clairière',fond:'img/bg.webp',w:1672,h:941,walk:[...WALK],depart:{x:520,y:600},
+ camps:[['rodeur',760,430,2],['rodeur',1060,560,2],['charo',330,250,2],['charo',1000,330,2],['mystique',720,250,1],['mystique',1290,720,1],['kobold',600,360,2],['colosse',1395,205,1]]};
+// Contrôle d'une carte importée ou relue (frontière de confiance) : renvoie la carte nettoyée, ou lève une erreur.
+function valideCarte(c){const n=(v,a,b)=>typeof v==='number'&&Number.isFinite(v)&&v>=a&&v<=b;
+ if(!c||typeof c!=='object')throw Error('Fichier de carte illisible.');
+ if(typeof c.fond!=='string'||!(/^data:image\/(png|jpeg|webp);base64,[A-Za-z0-9+/=]+$/.test(c.fond)||/^img\/[\w\/.-]+$/.test(c.fond)))throw Error('Fond de carte invalide.');
+ if(!n(c.w,64,12000)||!n(c.h,64,12000))throw Error('Taille de carte invalide.');
+ if(!Array.isArray(c.walk)||c.walk.length>300000||!c.walk.every(k=>typeof k==='string'&&/^-?\d{1,4},-?\d{1,4}$/.test(k)))throw Error('Cases de sol invalides.');
+ if(!c.depart||!n(c.depart.x,0,c.w)||!n(c.depart.y,0,c.h))throw Error('Départ invalide.');
+ if(!Array.isArray(c.camps)||c.camps.length>500||!c.camps.every(k=>Array.isArray(k)&&k.length===4&&Object.hasOwn(ADV,k[0])&&n(k[1],0,c.w)&&n(k[2],0,c.h)&&Number.isInteger(k[3])&&k[3]>=1&&k[3]<=10))throw Error('Adversaires invalides.');
+ return{nom:typeof c.nom==='string'?c.nom.slice(0,60):'la carte',fond:c.fond,w:c.w,h:c.h,walk:[...new Set(c.walk)],depart:{x:c.depart.x,y:c.depart.y},camps:c.camps.map(k=>[...k])}}
+console.assert((()=>{try{valideCarte({...DEMO,camps:[['__proto__',1,1,1]]});return false}catch(e){return true}})(),'valideCarte refuse un type inconnu');
+let CARTE=(()=>{try{return valideCarte(JSON.parse(localStorage.getItem('amertume-iso-carte')))}catch(e){return valideCarte(DEMO)}})();
+function appliqueCarte(){WW=CARTE.w;WH=CARTE.h;WALK.clear();for(const k of CARTE.walk)WALK.add(k)}
+appliqueCarte();
 const walkC=(i,j)=>WALK.has(i+','+j);
 const walkXY=(x,y)=>{if(x<8||y<8||x>WW-8||y>WH-8)return false;const c=cellOf(x,y);return walkC(c.i,c.j)};
 function snap(x,y){if(walkXY(x,y))return{x,y};let best=null,bd=1e9;for(const k of WALK){const [i,j]=k.split(',').map(Number),p=iso(i,j),d=Math.hypot(p.x-x,p.y-y);if(d<bd&&walkXY(p.x,p.y)){bd=d;best=p}}return best}
@@ -210,24 +246,23 @@ function ligneLibre(x0,y0,x1,y1){const n=Math.ceil(Math.hypot(x1-x0,y1-y0)/8);fo
 
 /* ================= Images ================= */
 const IMG={},img=s=>{if(!IMG[s]){const i=new Image();i.src=s;IMG[s]=i}return IMG[s]},ok=i=>i&&i.complete&&i.naturalWidth;
-img('img/bg.webp');for(const p of ['idle','w1','w2','atk'])img('img/u/borr_'+p+'.webp');
+img(CARTE.fond);for(const p of ['idle','w1','w2','atk'])img('img/u/borr_'+p+'.webp');
 for(const s in ANIM)for(const p of ANIM[s].poses)img('img/m/'+s+'_'+p+'.webp');
 for(const s of Object.keys(MS).filter(s=>!ANIM[s]))for(const p of ['w1','w2','atk','dead']){img('img/m/'+s+'_'+p+'.webp');if(p!=='dead')img('img/m/'+s+'_'+p+'_rim.webp')}
 const FXN=['slash','death','lvlup','fire','flame','boom','heal','holy','rock'];FXN.forEach(k=>img('img/fx/'+k+'.webp'));
 
 /* ================= État ================= */
-let S,hero,cam={x:0,y:0,z:1.8},paused=false,mjSpawn=null,showAggro=false,xpMul=1,shake=0;
+let edit=false,S,hero,cam={x:0,y:0,z:1.8},paused=false,mjSpawn=null,showAggro=false,xpMul=1,shake=0;
 function nouveau(){
  hero={nom:'Hrolf',x:0,y:0,r:11,face:1,vie:4,vieMax:4,endu:4,degats:1,pvClasse:16,def:2,
-  arme:{nom:'Hache lourde',des:'WR',mains:2,cadence:2.5},armure:{nom:'Armure de mailles',def:2},
+  arme:{nom:'Hache lourde',des:'WR',mains:2,cadence:REG.cadence},armure:{nom:'Armure de mailles',def:2},
   xp:100,depense:0,talents:new Set(['destructeur','rage']),etats:{},enrag:0,
   path:[],cible:null,prochain:0,walk:0,atk:0,auSol:0,coma:0,cd:{frappe:0},criUtilise:0,potions:3,reposCourts:0,reposOk:1};
- hero.pv=pvMax();const s=snap(520,600);hero.x=s.x;hero.y=s.y;
+ hero.pv=pvMax();const s=snap(CARTE.depart.x,CARTE.depart.y)||CARTE.depart;hero.x=s.x;hero.y=s.y;
  S={t:0,mons:[],corps:[],fx:[],txt:[],proj:[],combat:0,horsCombat:0,log:[]};
- const camps=[['rodeur',760,430,2],['rodeur',1060,560,2],['charo',330,250,2],['charo',1000,330,2],['mystique',720,250,1],['mystique',1290,720,1],['kobold',600,360,2],['colosse',1395,205,1]];
- for(const [t,x,y,n] of camps)campe(t,x,y,n);
- cam.x=hero.x;cam.y=hero.y;document.getElementById('journal').innerHTML='';
- jlog('carte','<span class="hro">'+hero.nom+'</span> entre dans la clairière.');majTout()}
+ for(const [t,x,y,n] of CARTE.camps)campe(t,x,y,n);if(edit)S.gagne=1;
+ if(!edit){cam.x=hero.x;cam.y=hero.y}document.getElementById('journal').innerHTML='';
+ jlog('carte','<span class="hro">'+hero.nom+'</span> entre dans '+CARTE.nom.replace(/[<>&]/g,'')+'.');majTout()}
 let uid=0;
 function campe(t,x,y,n){const camp=++uid;for(let k=0;k<n;k++){const a=k/n*6.28,p=snap(x+Math.cos(a)*(n>1?22:0),y+Math.sin(a)*(n>1?11:0));if(!p)continue;const d=ADV[t],sz=MS[d.spr];
  S.mons.push({id:++uid,t,d,camp,x:p.x,y:p.y,hx:p.x,hy:p.y,pv:d.pv,face:Math.random()<.5?1:-1,w:sz[0],h:sz[1],r:d.boss?26:10,aggro:0,prochain:0,walk:0,atk:0,etats:{},n:0,retour:0})}}
@@ -376,10 +411,11 @@ function drawAnim(m,t,hov){const A=ANIM[m.d.spr];let pose='idle',f=Math.floor(t*
  barreVie(m,hov)}
 function draw(t){g.setTransform(1,0,0,1,0,0);g.fillStyle='#000';g.fillRect(0,0,cv.width,cv.height);
  const z=cam.z*dpr,sx=shake>0?(Math.random()-.5)*6:0,sy=shake>0?(Math.random()-.5)*6:0;
- cam.x=Math.max(VW/2/cam.z,Math.min(WW-VW/2/cam.z,cam.x));cam.y=Math.max(VH/2/cam.z,Math.min(WH-VH/2/cam.z,cam.y));
- if(VW/cam.z>WW)cam.x=WW/2;if(VH/cam.z>WH)cam.y=WH/2;
+ if(!edit){cam.x=Math.max(VW/2/cam.z,Math.min(WW-VW/2/cam.z,cam.x));cam.y=Math.max(VH/2/cam.z,Math.min(WH-VH/2/cam.z,cam.y))}
+ if(!edit&&VW/cam.z>WW)cam.x=WW/2;if(!edit&&VH/cam.z>WH)cam.y=WH/2;
  g.setTransform(z,0,0,z,(VW/2-cam.x*cam.z+sx)*dpr,(VH/2-cam.y*cam.z+sy)*dpr);
- const bg=IMG['img/bg.webp'];if(ok(bg))g.drawImage(bg,0,0,WW,WH);
+ const bg=img(CARTE.fond);if(ok(bg))g.drawImage(bg,0,0,WW,WH);
+ if(edit)grilleEdition();
  if(showAggro){g.globalAlpha=.25;g.fillStyle='#e2ae72';for(const k of WALK){const [i,j]=k.split(',').map(Number),p=iso(i,j);g.beginPath();g.moveTo(p.x,p.y-TH/2);g.lineTo(p.x+TW/2,p.y);g.lineTo(p.x,p.y+TH/2);g.lineTo(p.x-TW/2,p.y);g.closePath();g.stroke()}g.globalAlpha=1;
   for(const m of vivants())anneau(m.x,m.y,m.d.boss?190:150,m.aggro?'#e2565f':'#ffffff55',1)}
  for(const c of S.corps){if(ANIM[c.spr]){g.globalAlpha=Math.max(0,Math.min(.9,(60-c.life)/5));frameAnim(c.spr,'idle',0,c.x,c.y-4,c.face,'brightness(.45) saturate(.6)',1.4*c.face);g.globalAlpha=1;continue}const im=IMG['img/m/'+c.spr+'_dead.webp'];if(!ok(im))continue;const w=im.naturalWidth/2,h=im.naturalHeight/2;g.save();g.globalAlpha=Math.max(0,Math.min(.9,(60-c.life)/5));g.translate(c.x,c.y);g.scale(c.face,1);g.drawImage(im,-w/2,-h+3,w,h);g.restore()}
@@ -396,7 +432,7 @@ function marques(){return Math.floor(hero.xp/100)}
 const dispo=()=>marques()-hero.depense;
 function rondHtml(k,o){o=o||{};const T=TAL[k],ty=tType(k),c='var(--'+ty+')';
  return `<div class="rond ${o.cls||''}" id="${o.id||''}" data-tal="${k}" style="--t:${c}"><div class="o">${T.ic?`<img src="img/talents/${T.ic}.png" alt="">`:`<b>${GLYPH[ty]}</b>`}${o.cd?'<div class="cd"></div>':''}</div>${o.h?`<span class="h">${o.h}</span>`:''}${o.q!==undefined?`<span class="q">${o.q}</span>`:''}<div class="n">${T.nom}</div></div>`}
-function majRonds(){let h=`<div class="rond" id="r_auto" data-k="auto" style="--t:var(--act)"><div class="o"><img src="img/i/dR.webp" alt=""><div class="cd"></div></div><div class="n">${hero.arme.nom}</div></div>`;
+function majRonds(){let h=`<div class="rond" id="r_auto" data-k="auto" style="--t:var(--act)"><div class="o"><img src="img/i/hache.png" alt=""><div class="cd"></div></div><div class="n">${hero.arme.nom}</div></div>`;
  if(has('frappe'))h+=rondHtml('frappe',{id:'r_frappe',h:'1',cd:1});if(has('cri'))h+=rondHtml('cri',{id:'r_cri',h:'2'});
  h+=`<div class="rond" id="r_potion" data-k="potion" style="--t:var(--ame)"><div class="o"><img src="img/i/potion.png" alt=""></div><span class="h">Q</span><span class="q">${hero.potions}</span><div class="n">Potion</div></div>`;
  h+=`<div class="rond" id="r_repos" data-k="repos" style="--t:var(--green)"><div class="o"><img src="img/i/heal.webp" alt=""></div><span class="h">R</span><span class="q">${Math.max(0,hero.vie-hero.reposCourts)}</span><div class="n">Repos court</div></div>`;
@@ -450,29 +486,67 @@ const monde=(x,y)=>({x:cam.x+(x-VW/2)/cam.z,y:cam.y+(y-VH/2)/cam.z});
 function sous(x,y){const p=monde(x,y);let best=null;for(const m of vivants()){if(Math.abs(p.x-m.x)<m.w/2+4&&p.y<m.y+6&&p.y>m.y-m.h-4&&(!best||m.y>best.y))best=m}return best}
 function ordre(x,y){if(hero.coma||hero.auSol>0)return;const m=sous(x,y);if(m){hero.cible=m;hero.path=chemin(hero.x,hero.y,m.x,m.y);return}
  hero.cible=null;const p=monde(x,y);hero.path=chemin(hero.x,hero.y,p.x,p.y)}
-cv.addEventListener('pointerdown',e=>{if(e.button!==0)return;mx=e.clientX;my=e.clientY;
+cv.addEventListener('pointerdown',e=>{mx=e.clientX;my=e.clientY;
+ if(edit)return edDown(e);if(e.button!==0)return;
  if(mjSpawn){const p=monde(mx,my);if(walkXY(p.x,p.y)){campe(mjSpawn,p.x,p.y,ADV[mjSpawn].boss||ADV[mjSpawn].distance?1:3);S.gagne=0}return}
  tenu=true;ordre(mx,my)});
-addEventListener('pointerup',()=>tenu=false);
-cv.addEventListener('pointermove',e=>{mx=e.clientX;my=e.clientY;survol=sous(mx,my);
+addEventListener('pointerup',()=>{tenu=false;peint=false;pan=null});
+cv.addEventListener('contextmenu',e=>e.preventDefault());
+cv.addEventListener('pointermove',e=>{mx=e.clientX;my=e.clientY;if(edit)return edMove();survol=sous(mx,my);
  if(survol){const d=survol.d;montreTip(`<h4>${d.nom}</h4><p>${d.famille} · ${d.type}</p><p>PV <b>${survol.pv}</b>/${d.pv} · DEF <b>${d.def}</b> · Dégâts <b>+${d.degats}</b> · XP <b>${d.xp}</b></p>${d.att.map(a=>`<p>${a.nom} : ${desHtml([...a.des].map(c=>({c,v:'·'})))}${a.feu?' · Feu':''}${a.auSol?' · Au sol':''}${a.tous?' · tous au contact':''}</p>`).join('')}`,mx,my,'#e2565f')}
  else if(!e.target.closest('.rond'))tip.style.display='none'});
-cv.addEventListener('wheel',e=>{cam.z=Math.max(1,Math.min(3.2,cam.z*(e.deltaY<0?1.1:.9)));e.preventDefault()},{passive:false});
+cv.addEventListener('wheel',e=>{cam.z=Math.max(edit?.3:1,Math.min(3.2,cam.z*(e.deltaY<0?1.1:.9)));e.preventDefault()},{passive:false});
 addEventListener('keydown',e=>{if(e.repeat)return;const k=e.key.toLowerCase();
  if(k==='1')frappeFurieuse();else if(k==='2')criDeGuerre();else if(k==='q')potion();else if(k==='r')reposCourt();
  else if(k==='t')$('bTal').click();else if(k==='m')$('bMJ').click();else if(k===' '){$('bPause').click();e.preventDefault()}
  else if(k==='escape'){ouvre('dTal',false);mjSpawn=null;$('mjSpawn').querySelectorAll('.btn').forEach(x=>x.classList.remove('on'))}});
+/* ================= Éditeur de carte (MJ) ================= */
+let outil='sol',pinceau=0,peint=false,pan=null;
+const edMsg=t=>{$('edMsg').textContent=t||''};
+function entreEdit(on){edit=on;$('edit').classList.toggle('on',on);$('mjEdit').classList.toggle('on',on);document.body.classList.toggle('edition',on);edMsg('');
+ if(!on){CARTE.walk=[...WALK];nouveau()}else{hero.path=[];hero.cible=null;S.mons.forEach(m=>{m.aggro=0})}}
+function grilleEdition(){const cs=[cellOf(0,0),cellOf(WW,0),cellOf(0,WH),cellOf(WW,WH)],I=cs.map(c=>c.i),J=cs.map(c=>c.j);g.lineWidth=1/cam.z;
+ for(let i=Math.min(...I)-1;i<=Math.max(...I)+1;i++)for(let j=Math.min(...J)-1;j<=Math.max(...J)+1;j++){const p=iso(i,j);if(p.x<-TW||p.y<-TH||p.x>WW+TW||p.y>WH+TH)continue;
+  g.beginPath();g.moveTo(p.x,p.y-TH/2);g.lineTo(p.x+TW/2,p.y);g.lineTo(p.x,p.y+TH/2);g.lineTo(p.x-TW/2,p.y);g.closePath();
+  if(walkC(i,j)){g.fillStyle='rgba(138,181,160,.32)';g.fill();g.strokeStyle='rgba(138,181,160,.6)'}else g.strokeStyle='rgba(255,255,255,.12)';g.stroke()}
+ anneau(CARTE.depart.x,CARTE.depart.y,22,'#e2ae72',2)}
+function peins(){const p=monde(mx,my),c=cellOf(p.x,p.y);for(let a=-pinceau;a<=pinceau;a++)for(let b=-pinceau;b<=pinceau;b++){const k=(c.i+a)+','+(c.j+b);outil==='sol'?WALK.add(k):WALK.delete(k)}}
+function edDown(e){if(e.button!==0){pan={x:mx,y:my,cx:cam.x,cy:cam.y};return}const p=monde(mx,my);
+ if(mjSpawn){CARTE.camps.push([mjSpawn,Math.round(p.x),Math.round(p.y),ADV[mjSpawn].boss||ADV[mjSpawn].distance?1:mjSpawn==='kobold'?3:2]);if(!walkXY(p.x,p.y))edMsg('Posé hors du sol : peins du sol dessous.');return nouveau()}
+ if(outil==='sol'||outil==='mur'){peint=true;peins()}
+ else if(outil==='depart'){CARTE.depart={x:Math.round(p.x),y:Math.round(p.y)};nouveau()}
+ else if(outil==='gomme'){let k=-1,bd=40;CARTE.camps.forEach((c,n)=>{const d=Math.hypot(c[1]-p.x,c[2]-p.y);if(d<bd){bd=d;k=n}});if(k>=0){CARTE.camps.splice(k,1);nouveau()}}}
+function edMove(){if(pan){cam.x=pan.cx-(mx-pan.x)/cam.z;cam.y=pan.cy-(my-pan.y)/cam.z}else if(peint)peins()}
+$('mjEdit').onclick=()=>entreEdit(!edit);$('edJouer').onclick=()=>entreEdit(false);
+$('edOutils').onclick=e=>{const b=e.target.closest('[data-o]');if(!b)return;outil=b.dataset.o;mjSpawn=null;$('mjSpawn').querySelectorAll('.btn').forEach(x=>x.classList.remove('on'));$('edOutils').querySelectorAll('.btn').forEach(x=>x.classList.toggle('on',x===b))};
+$('edPinceau').onclick=e=>{const b=e.target.closest('[data-p]');if(!b)return;pinceau=+b.dataset.p;$('edPinceau').querySelectorAll('.btn').forEach(x=>x.classList.toggle('on',x===b))};
+$('edTout').onclick=()=>{const cs=[cellOf(0,0),cellOf(WW,0),cellOf(0,WH),cellOf(WW,WH)],I=cs.map(c=>c.i),J=cs.map(c=>c.j);
+ for(let i=Math.min(...I);i<=Math.max(...I);i++)for(let j=Math.min(...J);j<=Math.max(...J);j++){const p=iso(i,j);if(p.x>TW/2&&p.y>TH/2&&p.x<WW-TW/2&&p.y<WH-TH/2)WALK.add(i+','+j)}};
+$('edVide').onclick=()=>WALK.clear();
+$('edFond').onchange=e=>{const f=e.target.files[0];e.target.value='';if(!f)return;if(!/^image\/(png|jpeg|webp)$/.test(f.type))return edMsg('Image PNG, JPEG ou WebP seulement.');
+ const rd=new FileReader();rd.onload=()=>{const im=new Image();im.onload=()=>{CARTE.fond=rd.result;IMG[rd.result]=im;CARTE.w=im.naturalWidth;CARTE.h=im.naturalHeight;CARTE.nom=f.name.replace(/\.[^.]+$/,'').slice(0,60);WW=CARTE.w;WH=CARTE.h;
+  WALK.clear();CARTE.camps=[];CARTE.depart={x:Math.round(WW/2),y:Math.round(WH/2)};cam.x=WW/2;cam.y=WH/2;cam.z=Math.min(1.8,VW/WW,VH/WH);nouveau();edMsg('Nouveau fond : peins le sol.')};im.onerror=()=>edMsg('Image illisible.');im.src=rd.result};rd.readAsDataURL(f)};
+$('edSauve').onclick=()=>{CARTE.walk=[...WALK];try{localStorage.setItem('amertume-iso-carte',JSON.stringify(CARTE));edMsg('Carte sauvée dans ce navigateur.')}catch(e){edMsg('Trop lourde pour le navigateur : exporte-la.')}};
+$('edExport').onclick=()=>{CARTE.walk=[...WALK];const a=document.createElement('a');a.href=URL.createObjectURL(new Blob([JSON.stringify(CARTE)],{type:'application/json'}));a.download=(CARTE.nom||'carte').replace(/[^\w-]+/g,'_')+'.json';a.click();setTimeout(()=>URL.revokeObjectURL(a.href),1000)};
+$('edImport').onchange=e=>{const f=e.target.files[0];e.target.value='';if(!f)return;if(f.size>40e6)return edMsg('Fichier trop lourd.');f.text().then(t=>{CARTE=valideCarte(JSON.parse(t));appliqueCarte();img(CARTE.fond);cam.x=WW/2;cam.y=WH/2;nouveau();edMsg('Carte importée.')}).catch(err=>edMsg(err.message||'Fichier illisible.'))};
+$('edDemo').onclick=()=>{CARTE=valideCarte(DEMO);appliqueCarte();nouveau();edMsg('Carte de démo.')};
+// Réglages
+function majReg(){$('rCad').value=REG.cadence;$('vCad').textContent=String(REG.cadence).replace('.',',')+' s';$('rTour').value=REG.tour;$('vTour').textContent=String(REG.tour).replace('.',',')+' s';
+ try{localStorage.setItem('amertume-iso-reglages',JSON.stringify(REG))}catch(e){}}
+$('rCad').oninput=e=>{REG.cadence=+e.target.value;hero.arme.cadence=REG.cadence;hero.prochain=Math.min(hero.prochain,S.t+REG.cadence);majReg()};
+$('rTour').oninput=e=>{REG.tour=+e.target.value;TOUR=REG.tour;majReg()};
+majReg();
 // Portrait : la tête du sprite du Destructeur.
 function portrait(){const im=IMG['img/u/borr_idle.webp'];if(!ok(im))return setTimeout(portrait,100);const p=$('portrait').getContext('2d');p.imageSmoothingEnabled=false;p.drawImage(im,im.naturalWidth*.22,0,im.naturalWidth*.56,im.naturalWidth*.56,0,0,128,128)}
 
 let last=performance.now(),acc=0;
 function loop(now){const dt=Math.min(.05,(now-last)/1000);last=now;
- if(!paused){if(tenu&&!survol&&(acc+=dt)>.15){acc=0;ordre(mx,my)}step(dt)}
- cam.x+=(hero.x-cam.x)*Math.min(1,dt*6);cam.y+=(hero.y-30-cam.y)*Math.min(1,dt*6);draw(now/1000);majCd();
+ if(!paused&&!edit){if(tenu&&!survol&&(acc+=dt)>.15){acc=0;ordre(mx,my)}step(dt)}
+ if(!edit){cam.x+=(hero.x-cam.x)*Math.min(1,dt*6);cam.y+=(hero.y-30-cam.y)*Math.min(1,dt*6)}draw(now/1000);majCd();
  if(!paused&&Math.floor(S.t*4)!==Math.floor((S.t-dt)*4))majTout();requestAnimationFrame(loop)}
 nouveau();portrait();requestAnimationFrame(loop);
 // Accroches de test (tools/smoke.js)
-window.__test={get S(){return S},get hero(){return hero},step,ordre:(x,y)=>{hero.cible=null;hero.path=chemin(hero.x,hero.y,x,y)},cible:m=>{hero.cible=m},frappeFurieuse,criDeGuerre,reposCourt,potion,lancer,resoudre,pause:v=>{paused=v}};
+window.__test={get S(){return S},get hero(){return hero},step,ordre:(x,y)=>{hero.cible=null;hero.path=chemin(hero.x,hero.y,x,y)},cible:m=>{hero.cible=m},frappeFurieuse,criDeGuerre,reposCourt,potion,lancer,resoudre,pause:v=>{paused=v},entreEdit,get WALK(){return WALK}};
 window.addEventListener('error',e=>{(window.__errs=window.__errs||[]).push(e.message)});
 </script>
 </body>
